@@ -14,6 +14,24 @@
 ## Windows Shellcode memo
 当プログラムには直接関係ないただのメモ
 
+(参考)https://idafchev.github.io/exploit/2017/09/26/writing_windows_shellcode.html
+- WindowsはLinuxなどと異なり直接システムコール関数にアクセスできない
+- (外部) WinAPI <-> NtAPI <-> syscall (内部)
+- WinAPI (kernel32.dll, advapi32.dll, gdi32.dll...)
+- NtAPI (ntdll.dll)
+- kernel32.dll＆ntdll.dllはどのプロセスにもimportされる
+- WinAPIを利用するために，ロードされてるDLLのBaseAddressを知る必要がある 
+
 - Windowsの実行可能ファイル形式はPE format(Portable Executable)
     - プロセス生成時には，メモリ割り当てとインポートした関数解決が行われる
 
+
+### 32-bit
+- DLLBase Addr の見つけ方
+    - fs:0x30 -> PEB (Process Env Block)
+    - [PEB + 0x0C] -> PEB_LDR_DATA
+    - [PEB_LDR_DATA + 0x10] -> InMemoryOrderModuleList
+    ([... + 0x14] -> InInitializationOrderModuleList)
+    - [ InMemoryOrderModuleList ] -> ntdll.dll entry
+    - [ntdll.dll entry] -> kernel32.dll entry
+    - [kernel32.dll + 0x10] -> kernel32.dll baseaddr!!!
