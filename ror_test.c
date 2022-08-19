@@ -1,10 +1,7 @@
 #include <stdio.h>
 
 void print_bin(int n) {
-    int i;
-    for (i = 0; i < 32; i++) {
-        printf("%d", (n >> i) & 1);
-    }
+    for (int i = 0; i < 32; i++) printf("%d", (n >> i) & 1);
 }
 
 unsigned int ror(unsigned int x, unsigned int n)
@@ -25,6 +22,7 @@ int main(int argc, char *argv[]) {
     char *s = argv[1];
     unsigned int hash = 0;
     while (*s) {
+        printf("%c: ", *s);
         hash = ror(hash, 0xd);
         hash += *s;
         s++;
