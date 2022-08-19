@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     unsigned int hash = 0;
     while (*s) {
         printf("%c: ", *s);
-        hash = ror(hash, 0xd);
+        hash = ror(hash, 0x11);
         hash += *s;
         s++;
     }
