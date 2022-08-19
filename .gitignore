@@ -1,2 +1,4 @@
 *.exe
+*.bin
+*.o
 b_encoder/target
