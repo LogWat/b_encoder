@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs;
 use std::io::prelude::*;
 use std::env;
 
@@ -18,21 +18,35 @@ fn main() -> std::io::Result<()> {
         _ => {}
     }
 
-    let mut input_file = match File::open(input) {
-        Ok(file) => file,
-        Err(_) => {
-            println!("Could not open input file");
+    let content = match fs::read_to_string(input) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("Fail to read file: {}", e);
             return Ok(());
         }
     };
-    let mut buf: Vec<u8> = Vec::new();
-    input_file.read_to_end(&mut buf)?;
 
-    let mut output_file = File::create(output)?;
+    let mut bytes = Vec::new();
+    for c in content.split("\\x") {
+        // convert hex to byte
+        match u8::from_str_radix(&c, 16) {
+            Ok(b) => bytes.push(b),
+            Err(e) => {
+                // space is ignored
+                if c.len() > 0 {
+                    println!("Fail to convert hex to byte: {}", e);
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+
+    let mut output_file = fs::File::create(output)?;
 
     // encode
     let mut encoded: Vec<u8> = Vec::new();
-    for b in buf {
+    for b in bytes {
         let mut b0 = b % 0x10;
         let mut b1 = b / 0x10;
         b0 += 0x61;
@@ -41,7 +55,10 @@ fn main() -> std::io::Result<()> {
         encoded.push(b1);
     }
 
-    output_file.write_all(&encoded)?;
+    for b in encoded {
+        println!("\\x{:x}", b);
+        output_file.write(&format!("\\x{:x}", b).as_bytes())?;
+    }
 
     Ok(())
 }
