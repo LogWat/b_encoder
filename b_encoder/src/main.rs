@@ -75,6 +75,7 @@ fn main() -> std::io::Result<()> {
     }
 
     let mut encoded_hash: u32 = 0;
+    let mut lf_cnt: u32 = 0;
     for b in bytes {
         let mut b0 = b % 0x10;
         let mut b1 = b / 0x10;
@@ -91,6 +92,16 @@ fn main() -> std::io::Result<()> {
             output.write(&[b0, b1])?;
         } else {
             output.write(&format!("\\x{:x}\\x{:x}", b0, b1).as_bytes())?;
+        }
+
+        lf_cnt += 1;
+        if lf_cnt == 20 {
+            if opts.format == "binary" {
+                output.write(&[0x0A])?;
+            } else {
+                output.write(&format!("\\x0A").as_bytes())?;
+            }
+            lf_cnt = 0;
         }
     }
 
