@@ -66,8 +66,12 @@ fn main() -> std::io::Result<()> {
         }
     };
     match opts.format.as_ref() {
-        "binary" => {}
-        "hex" => {}
+        "binary" => {
+            output.write(&[0x0A])?; // insert lf for formatting
+        }
+        "hex" => {
+            output.write(b"\\x0A")?;
+        }
         _ => {
             println!("Invalid format. Must be binary or hex");
             return Ok(());
@@ -94,12 +98,13 @@ fn main() -> std::io::Result<()> {
             output.write(&format!("\\x{:x}\\x{:x}", b0, b1).as_bytes())?;
         }
 
+        // insert LF at 21st char
         lf_cnt += 1;
         if lf_cnt == 20 {
             if opts.format == "binary" {
-                output.write(&[0x0A])?;
+                output.write(&[0x0a])?;
             } else {
-                output.write(&format!("\\x0A").as_bytes())?;
+                output.write(&format!("\\x0a").as_bytes())?;
             }
             lf_cnt = 0;
         }
@@ -109,16 +114,12 @@ fn main() -> std::io::Result<()> {
     // shellcode end with \x20(space) and hash
     if opts.format == "binary" {
         output.write(&[0x20])?;
-        output.write(&[(encoded_hash >> 24) as u8])?;
-        output.write(&[(encoded_hash << 8 >> 24) as u8])?;
-        output.write(&[(encoded_hash << 16 >> 24) as u8])?;
-        output.write(&[(encoded_hash << 24 >> 24) as u8])?;
+        // consider endianness
+        output.write(&encoded_hash.to_le_bytes())?;
     } else {
         output.write("\\x20".as_bytes())?;
-        output.write(&format!("\\x{:x}", (encoded_hash >> 24) as u8).as_bytes())?;
-        output.write(&format!("\\x{:x}", (encoded_hash << 8 >> 24) as u8).as_bytes())?;
-        output.write(&format!("\\x{:x}", (encoded_hash << 16 >> 24) as u8).as_bytes())?;
-        output.write(&format!("\\x{:x}", (encoded_hash << 24 >> 24) as u8).as_bytes())?;
+        // consider endianness
+        output.write(&format!("\\x{:x}\\x{:x}\\x{:x}\\x{:x}", (encoded_hash << 24 >> 24) as u8, (encoded_hash << 16 >> 24) as u8, (encoded_hash << 8 >> 24) as u8, (encoded_hash >> 24) as u8).as_bytes())?;
     }
 
     Ok(())
