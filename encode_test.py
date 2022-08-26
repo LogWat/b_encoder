@@ -18,7 +18,7 @@ for i in range(0x0, 0xFF + 1):
 print("[!] Decode")
 c = 0
 for i in l:
-    r = ((ord(i[0]) - 0x61) << 4) + (ord(i[1]) - 0x61)
+    r = ((ord(i[0]) - 0x61) << 4) + ord(i[1]) - 0x61
     print("{} => 0x{:02X} | ".format(i, r), end='')
     c += 1
     if c % 0x10 == 0:
