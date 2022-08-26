@@ -67,10 +67,10 @@ fn main() -> std::io::Result<()> {
     };
     match opts.format.as_ref() {
         "binary" => {
-            output.write(&[0x0A])?; // insert lf for formatting
+            output.write(&[0x0a])?; // insert lf for formatting
         }
         "hex" => {
-            output.write(b"\\x0A")?;
+            output.write(b"\\x0a")?;
         }
         _ => {
             println!("Invalid format. Must be binary or hex");
@@ -88,14 +88,14 @@ fn main() -> std::io::Result<()> {
 
         // cal hash
         encoded_hash = ror32(encoded_hash, 0x17);
-        encoded_hash += b0 as u32;
-        encoded_hash = ror32(encoded_hash, 0x17);
         encoded_hash += b1 as u32;
+        encoded_hash = ror32(encoded_hash, 0x17);
+        encoded_hash += b0 as u32;
 
         if opts.format == "binary" {
-            output.write(&[b0, b1])?;
+            output.write(&[b1, b0])?;
         } else {
-            output.write(&format!("\\x{:x}\\x{:x}", b0, b1).as_bytes())?;
+            output.write(&format!("\\x{:x}\\x{:x}", b1, b0).as_bytes())?;
         }
 
         // insert LF at 21st char
