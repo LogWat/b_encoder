@@ -16,6 +16,7 @@
 - 生成されたShellcodeを実行するためには，デコーダを先頭に付与する必要がある(decode.asm)
 
 - nasm -f elf32 a.asm ; ld -melf_i386 -o a a.o
+- objdump -d ./*** |grep '[0-9a-f]:'|grep -v 'file'|cut -f2 -d:|cut -f1-7 -d' '|tr -s ' '|tr '\t' ' '|sed 's/ $//g'|sed 's/ /\\ x/g'|paste -d '' -s |sed 's/^/"/'|sed 's/$/"/g' | grep "\\x00"
 
 - **逆アセンブルされればすぐに分かる小細工程度のプログラム(遊戯用)**
 ---
