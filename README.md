@@ -18,6 +18,11 @@
 - nasm -f elf32 a.asm ; ld -melf_i386 -o a a.o
 - objdump -d ./*** |grep '[0-9a-f]:'|grep -v 'file'|cut -f2 -d:|cut -f1-7 -d' '|tr -s ' '|tr '\t' ' '|sed 's/ $//g'|sed 's/ /\\ x/g'|paste -d '' -s |sed 's/^/"/'|sed 's/$/"/g' | grep "\\x00"
 
+- alphanumeric shellcodeとは異なり，このプログラムではASCII文字 0x21(!) ~ 0x7E(~)への変換を行う
+    - 与えられた命令列からスタックに変換した命令列を積んでいく
+    - その際の命令列がASCII文字範囲となるようにする
+    - 最終的にjmp esp によって与えられたshellcodeを実行するようにする
+
 - **逆アセンブルされればすぐに分かる小細工程度のプログラム(遊戯用)**
 ---
 ## Windows Shellcode memo
