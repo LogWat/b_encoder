@@ -70,3 +70,15 @@
 ## ネタ帳
 - encodeした結果の末尾に，shellcode全体のハッシュ値を署名として付与してもおもしろそう
     - decodeの際にまずそのハッシュ値を確認させる
+
+## ASCII-Shellcode-Tech
+- ASCII-Shellcodeとは，Shellcodeをバイナリ文字列にしたときに，すべてASCII文字(0x30 ~ 0x7A)の範囲で表せるようなもの
+
+- NOP
+    - IPSなどは，単純な繰り返し文字からNOPスレッドを感知できる場合がある
+    - INC&DEC, PUSH&POP reg で対策
+
+- Gen 0x00 (byte, dword...)
+    - ` push byte 0x?? -> pop eax -> xor al, 0x?? ` -> `j?X4?`
+    - ` push 0x???????? -> pop eax -> xor al, 0x???????? ` -> `j?X4?`
+    - ??の部分がASCIIなら別になんでもいい
