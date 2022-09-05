@@ -19,6 +19,34 @@ fn ror32(num: u32, r: u32) -> u32 {
     (num >> r) | (num << (32 - r))
 }
 
+// 0x???????? = 0xFFFFFFFF ^ (1) ^ (2) となるように
+// 与えられた0x????????を1と2に分解する (1, 2はともに0x21~0x7Fの範囲のバイトの組み合わせ)
+// 1と2を返却する関数
+fn split_to_ascii(byte_seq: u32) -> (u32, u32) {
+    let bytes: [u8; 4] = byte_seq.to_be_bytes();
+    let mut num1: u32 = 0;
+    let mut num2: u32 = 0;
+    for (i, b) in bytes.iter().enumerate() {
+        let stand_bits: u8 = b ^ 0xFF;
+        for j in 0..8 {
+            let tmp = ((b & 1) + j) % 2;
+            if stand_bits & (1 << j) != 0 {
+                num1 |= (tmp as u32) << j;
+                num2 |= ((1 - tmp) as u32) << j;
+            } else {
+                num1 |= (tmp as u32) << j;
+                num2 |= (tmp as u32) << j;
+            }
+        }
+        if i != 3 {
+            num1 <<= 8;
+            num2 <<= 8;
+        }
+    }
+
+    (num1, num2)
+}
+
 fn main() -> std::io::Result<()> {
     let opts = Opts::parse();
     let input = match fs::read_to_string(opts.input) {
@@ -37,10 +65,34 @@ fn main() -> std::io::Result<()> {
     };
 
     let mut bytes = Vec::new();
+    let mut for_push_bytes: Vec<u32> = Vec::new();
+    let mut counter = 0;
     for c in input.split("\\x") {
         // convert hex to byte
         match u8::from_str_radix(&c, 16) {
-            Ok(b) => bytes.push(b),
+            Ok(b) => {
+                bytes.push(b);
+                counter += 1;
+                if counter == 4 {
+                    for_push_bytes.push(
+                        ((bytes[counter-1] as u32) << 24) |
+                        ((bytes[counter-2] as u32) << 16) |
+                        ((bytes[counter-3] as u32) << 8) |
+                        (bytes[counter-4] as u32)
+                    );
+
+                    let (num1, num2) = split_to_ascii(for_push_bytes[for_push_bytes.len()-1]);
+        
+                    println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0xFFFFFFFF ^ 0x{:08X} ^ 0x{:08X}",
+                        bytes[counter-4], bytes[counter-3], bytes[counter-2], bytes[counter-1],
+                        for_push_bytes[for_push_bytes.len()-1],
+                        num1, num2
+                    );
+
+                    bytes.clear();
+                    counter = 0;
+                }
+            },
             Err(e) => {
                 // space is ignored
                 if c.len() > 0 {
@@ -49,6 +101,23 @@ fn main() -> std::io::Result<()> {
                 }
             }
         }
+    }
+
+    // fill the last bytes
+    if bytes.len() != 0 {
+        for _ in counter..4 {
+            bytes.push(0x90);
+        }
+        for_push_bytes.push(
+            ((bytes[3] as u32) << 24) |
+            ((bytes[2] as u32) << 16) |
+            ((bytes[1] as u32) << 8) |
+            (bytes[0] as u32)
+        );
+        println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X}",
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            for_push_bytes[for_push_bytes.len()-1]
+        );
     }
 
     // encode
