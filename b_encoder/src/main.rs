@@ -1,6 +1,7 @@
 use std::fs;
 use std::io::prelude::*;
 use clap::Parser;
+use rand::Rng;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -42,7 +43,8 @@ fn split_to_ascii(byte_seq: u32) -> (u32, u32, u32) {
                 }
             }
         }
-        let (j, k) = candidates[0];
+        let mut rng = rand::thread_rng();
+        let (j, k) = candidates[rng.gen_range(0..candidates.len())];
         num1 |= (j as u32) << ((3 - i) * 8);
         num2 |= (k as u32) << ((3 - i) * 8);
     }
