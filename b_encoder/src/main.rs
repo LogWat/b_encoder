@@ -19,32 +19,35 @@ fn ror32(num: u32, r: u32) -> u32 {
     (num >> r) | (num << (32 - r))
 }
 
-// 0x???????? = 0xFFFFFFFF ^ (1) ^ (2) となるように
-// 与えられた0x????????を1と2に分解する (1, 2はともに0x21~0x7Fの範囲のバイトの組み合わせ)
-// 1と2を返却する関数
-fn split_to_ascii(byte_seq: u32) -> (u32, u32) {
+// 0x???????? = (1) ^ (2) ^ (3) となるように
+// 与えられた0x????????を1と2に分解する (2, 3はともに0x21~0x7Fの範囲のバイトの組み合わせ)
+// 1は0xFFと0x00の組み合わせで表現する
+// 1, 2, 3返却する関数
+fn split_to_ascii(byte_seq: u32) -> (u32, u32, u32) {
     let bytes: [u8; 4] = byte_seq.to_be_bytes();
+    let mut stand: u32 = 0;
     let mut num1: u32 = 0;
     let mut num2: u32 = 0;
     for (i, b) in bytes.iter().enumerate() {
-        let stand_bits: u8 = b ^ 0xFF;
-        for j in 0..8 {
-            let tmp = ((b & 1) + j) % 2;
-            if stand_bits & (1 << j) != 0 {
-                num1 |= (tmp as u32) << j;
-                num2 |= ((1 - tmp) as u32) << j;
-            } else {
-                num1 |= (tmp as u32) << j;
-                num2 |= (tmp as u32) << j;
+        let mut tmp = *b as u8;
+        if *b >= 0x80 {
+            stand |= (0xFF << ((3 - i) * 8)) as u32;
+            tmp ^= 0xFF;
+        }
+        let mut candidates: Vec<(u8, u8)> = Vec::new();
+        for j in 0x21..0x7F {
+            for k in 0x21..0x7F {
+                if j ^ k == tmp {
+                    candidates.push((j, k)); // 乱数使ってばらばらにする？
+                }
             }
         }
-        if i != 3 {
-            num1 <<= 8;
-            num2 <<= 8;
-        }
+        let (j, k) = candidates[0];
+        num1 |= (j as u32) << ((3 - i) * 8);
+        num2 |= (k as u32) << ((3 - i) * 8);
     }
 
-    (num1, num2)
+    (stand, num1, num2)
 }
 
 fn main() -> std::io::Result<()> {
@@ -81,12 +84,12 @@ fn main() -> std::io::Result<()> {
                         (bytes[counter-4] as u32)
                     );
 
-                    let (num1, num2) = split_to_ascii(for_push_bytes[for_push_bytes.len()-1]);
+                    let (stand, num1, num2) = split_to_ascii(for_push_bytes[for_push_bytes.len()-1]);
         
-                    println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0xFFFFFFFF ^ 0x{:08X} ^ 0x{:08X}",
+                    println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0x{:08X} ^ 0x{:08X} ^ 0x{:08X}",
                         bytes[counter-4], bytes[counter-3], bytes[counter-2], bytes[counter-1],
                         for_push_bytes[for_push_bytes.len()-1],
-                        num1, num2
+                        stand, num1, num2
                     );
 
                     bytes.clear();
