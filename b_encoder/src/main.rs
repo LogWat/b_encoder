@@ -39,12 +39,12 @@ fn split_to_ascii(byte_seq: u32) -> (u32, u32, u32) {
         for j in 0x21..0x7F {
             for k in 0x21..0x7F {
                 if j ^ k == tmp {
-                    candidates.push((j, k)); // 乱数使ってばらばらにする？
+                    candidates.push((j, k));
                 }
             }
         }
         let mut rng = rand::thread_rng();
-        let (j, k) = candidates[rng.gen_range(0..candidates.len())];
+        let (j, k) = candidates[rng.gen_range(0..candidates.len())]; // TODO: 乱数で決定することは適切か検討する
         num1 |= (j as u32) << ((3 - i) * 8);
         num2 |= (k as u32) << ((3 - i) * 8);
     }
@@ -88,6 +88,7 @@ fn main() -> std::io::Result<()> {
 
                     let (stand, num1, num2) = split_to_ascii(for_push_bytes[for_push_bytes.len()-1]);
         
+                    // 色つけたいね
                     println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0x{:08X} ^ 0x{:08X} ^ 0x{:08X}",
                         bytes[counter-4], bytes[counter-3], bytes[counter-2], bytes[counter-1],
                         for_push_bytes[for_push_bytes.len()-1],
@@ -119,9 +120,11 @@ fn main() -> std::io::Result<()> {
             ((bytes[1] as u32) << 8) |
             (bytes[0] as u32)
         );
-        println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X}",
+        let (stand, num1, num2) = split_to_ascii(for_push_bytes[for_push_bytes.len()-1]);
+        println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0x{:08X} ^ 0x{:08X} ^ 0x{:08X}",
             bytes[0], bytes[1], bytes[2], bytes[3],
-            for_push_bytes[for_push_bytes.len()-1]
+            for_push_bytes[for_push_bytes.len()-1],
+            stand, num1, num2
         );
     }
 
