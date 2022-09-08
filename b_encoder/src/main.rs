@@ -3,6 +3,8 @@ use std::io::prelude::*;
 use clap::Parser;
 use rand::Rng;
 
+// mod genasm;
+
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Opts {
@@ -21,11 +23,11 @@ fn ror32(num: u32, r: u32) -> u32 {
 }
 
 // 0x???????? = (1) ^ (2) ^ (3) となるように
-// 与えられた0x????????を1と2に分解する (2, 3はともに0x21~0x7Fの範囲のバイトの組み合わせ)
-// 1は0xFFと0x00の組み合わせで表現する
-// 1, 2, 3返却する関数
+// 与えられた0x????????を1, 2, 3に分解する
+// 1は0xFFと0x00の組み合わせ, 2, 3はともに0x21~0x7Fの範囲のバイトの組み合わせで表現
+// 1, 2, 3返却する
 fn split_to_ascii(byte_seq: u32) -> (u32, u32, u32) {
-    let bytes: [u8; 4] = byte_seq.to_be_bytes();
+    let bytes: [u8; 4] = byte_seq.to_le_bytes(); // consider little endian
     let mut stand: u32 = 0;
     let mut num1: u32 = 0;
     let mut num2: u32 = 0;
@@ -49,6 +51,10 @@ fn split_to_ascii(byte_seq: u32) -> (u32, u32, u32) {
         num2 |= (k as u32) << ((3 - i) * 8);
     }
 
+    let for_print: [u8; 4] = byte_seq.to_be_bytes();
+    println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0x{:08X} ^ 0x{:08X} ^ 0x{:08X}",
+    for_print[0], for_print[1], for_print[2], for_print[3], stand ^ num1 ^ num2, stand, num1, num2);
+
     (stand, num1, num2)
 }
 
@@ -69,63 +75,54 @@ fn main() -> std::io::Result<()> {
         }
     };
 
-    let mut bytes = Vec::new();
-    let mut for_push_bytes: Vec<u32> = Vec::new();
-    let mut counter = 0;
-    for c in input.split("\\x") {
-        // convert hex to byte
-        match u8::from_str_radix(&c, 16) {
-            Ok(b) => {
-                bytes.push(b);
-                counter += 1;
-                if counter == 4 {
-                    for_push_bytes.push(
-                        ((bytes[counter-1] as u32) << 24) |
-                        ((bytes[counter-2] as u32) << 16) |
-                        ((bytes[counter-3] as u32) << 8) |
-                        (bytes[counter-4] as u32)
-                    );
-
-                    let (stand, num1, num2) = split_to_ascii(for_push_bytes[for_push_bytes.len()-1]);
-        
-                    // 色つけたいね
-                    println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0x{:08X} ^ 0x{:08X} ^ 0x{:08X}",
-                        bytes[counter-4], bytes[counter-3], bytes[counter-2], bytes[counter-1],
-                        for_push_bytes[for_push_bytes.len()-1],
-                        stand, num1, num2
-                    );
-
-                    bytes.clear();
-                    counter = 0;
-                }
-            },
-            Err(e) => {
-                // space is ignored
-                if c.len() > 0 {
-                    println!("Fail to convert hex to byte: {}", e);
+    let raw_bytes = input.split("\\x").collect::<Vec<&str>>();
+    let mut bytes: Vec<u8> = Vec::new();
+    // find 0xC3 (ret) and replace it with 0x8B, 0xE1 (mov esp, ecx)
+    // remove 0x60 (pushad), 0x61 (popad), 0x9C (pushfd), 0x9D (popfd)
+    for (i, b) in raw_bytes.iter().enumerate() {
+        if *b == "C3" || *b == "c3" {
+            bytes.push(0x8B);
+            bytes.push(0xE1);
+        } else if *b == "60" || *b == "61" || (*b == "9C" || *b == "9c") || (*b == "9D" || *b == "9d") { 
+            continue;
+        } else if *b == "" {
+            continue;
+        } else {
+            match u8::from_str_radix(b, 16) {
+                Ok(b) => bytes.push(b),
+                Err(e) => {
+                    eprintln!("Failed to parse input file: {}", e);
                     return Ok(());
                 }
             }
         }
     }
 
-    // fill the last bytes
-    if bytes.len() != 0 {
-        for _ in counter..4 {
-            bytes.push(0x90);
+    let mut ascii_bytes_set: Vec<(u32, u32, u32)> = Vec::new();
+    for (i, b) in bytes.iter().enumerate() {
+        if (i + 1) % 4 == 0 {
+            let mut tmp: u32 = 0;
+            tmp |= *b as u32;
+            tmp |= (bytes[i - 1] as u32) << 8;
+            tmp |= (bytes[i - 2] as u32) << 16;
+            tmp |= (bytes[i - 3] as u32) << 24;
+            let (stand, num1, num2) = split_to_ascii(tmp);
+            ascii_bytes_set.push((stand, num1, num2));
         }
-        for_push_bytes.push(
-            ((bytes[3] as u32) << 24) |
-            ((bytes[2] as u32) << 16) |
-            ((bytes[1] as u32) << 8) |
-            (bytes[0] as u32)
-        );
-        let (stand, num1, num2) = split_to_ascii(for_push_bytes[for_push_bytes.len()-1]);
-        println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0x{:08X} ^ 0x{:08X} ^ 0x{:08X}",
-            bytes[0], bytes[1], bytes[2], bytes[3],
-            for_push_bytes[for_push_bytes.len()-1],
-            stand, num1, num2
-        );
+
+        // if the length of bytes is not a multiple of 4, add 0x90 (nop) to the end of bytes
+        if (i + 1) == bytes.len() && (i + 1) % 4 != 0 {
+            let mut tmp: u32 = 0;
+            for j in 0..4 {
+                if j >= 4 - (i + 1) % 4 {
+                    tmp |= (bytes[i - j] as u32) << (j * 8);
+                } else {
+                    tmp |= 0x90 << (j * 8);
+                }
+            }
+            let (stand, num1, num2) = split_to_ascii(tmp);
+            ascii_bytes_set.push((stand, num1, num2));
+        }
     }
 
     // encode
