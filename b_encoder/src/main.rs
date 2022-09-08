@@ -3,7 +3,7 @@ use std::io::prelude::*;
 use clap::Parser;
 use rand::Rng;
 
-// mod genasm;
+mod genasm;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -68,7 +68,9 @@ fn main() -> std::io::Result<()> {
         }
     };
     let mut output = match fs::File::create(opts.output) {
-        Ok(output) => output,
+        Ok(output) => {
+            output
+        },
         Err(e) => {
             eprintln!("Failed to create output file: {}", e);
             return Ok(());
@@ -79,13 +81,13 @@ fn main() -> std::io::Result<()> {
     let mut bytes: Vec<u8> = Vec::new();
     // find 0xC3 (ret) and replace it with 0x8B, 0xE1 (mov esp, ecx)
     // remove 0x60 (pushad), 0x61 (popad), 0x9C (pushfd), 0x9D (popfd)
-    for (i, b) in raw_bytes.iter().enumerate() {
-        if *b == "C3" || *b == "c3" {
+    for b in raw_bytes {
+        if b == "C3" || b == "c3" {
             bytes.push(0x8B);
             bytes.push(0xE1);
-        } else if *b == "60" || *b == "61" || (*b == "9C" || *b == "9c") || (*b == "9D" || *b == "9d") { 
+        } else if b == "60" || b == "61" || (b == "9C" || b == "9c") || (b == "9D" || b == "9d") { 
             continue;
-        } else if *b == "" {
+        } else if b == "" {
             continue;
         } else {
             match u8::from_str_radix(b, 16) {
@@ -122,6 +124,24 @@ fn main() -> std::io::Result<()> {
             }
             let (stand, num1, num2) = split_to_ascii(tmp);
             ascii_bytes_set.push((stand, num1, num2));
+        }
+    }
+
+    // ASM TEST !!!
+    let mut asm_outputfile = match fs::File::create("asm_output.asm") {
+        Ok(output) => {
+            output
+        },
+        Err(e) => {
+            eprintln!("Failed to create asm_output.asm: {}", e);
+            return Ok(());
+        }
+    };
+    match genasm::generate_asm(&ascii_bytes_set, &mut asm_outputfile) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Failed to generate asm: {}", e);
+            return Ok(());
         }
     }
 
