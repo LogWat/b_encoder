@@ -39,12 +39,7 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
         }
     }
 
-    asm.push_str("retpre:\n");
-    asm.push_str("    push ecx\n"); // ecx = original esp + all registers
-    asm.push_str("    pop esp\n");  // esp = original esp + all registers
-    asm.push_str("    popfd\n");
-    asm.push_str("    popad\n");    // esp = original esp
-    asm.push_str("    ret\n");
+    asm.push_str("    jmp esp\n");
 
     output.write_all(asm.as_bytes())
 }

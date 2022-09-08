@@ -79,14 +79,18 @@ fn main() -> std::io::Result<()> {
 
     let raw_bytes = input.split("\\x").collect::<Vec<&str>>();
     let mut bytes: Vec<u8> = Vec::new();
-    // find 0xC3 (ret) and replace it with 0x8B, 0xE1 (mov esp, ecx)
-    // remove 0x60 (pushad), 0x61 (popad), 0x9C (pushfd), 0x9D (popfd)
+    // find 0xC3 (ret) and replace it with:
+    // 0x8B, 0xE1 (mov esp, ecx)
+    // 0x9D (popfd)
+    // 0x61 (popad)
+    // 0xC3 (ret)
     for b in raw_bytes {
         if b == "C3" || b == "c3" {
             bytes.push(0x8B);
             bytes.push(0xE1);
-        } else if b == "60" || b == "61" || (b == "9C" || b == "9c") || (b == "9D" || b == "9d") { 
-            continue;
+            bytes.push(0x9D);
+            bytes.push(0x61);
+            bytes.push(0xC3);
         } else if b == "" {
             continue;
         } else {

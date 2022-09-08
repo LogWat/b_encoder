@@ -20,6 +20,18 @@
 |0x67|and|r/m16/32/r16/32|r16/32/r/m16/32|
 
 ---
+- shellcodeをstackにpushする方式の場合の問題点
+    - stackにpushしていくために実行されるshellcodeをS1とする
+    - stack上に展開されたshellcodeをS2とする
+        - S2内でretが呼び出されてもespはS2の先頭を指しているはずなので正常に戻れない
+        - S1でpushad, pushfdを呼び出した場合，S2でその分のpopad, popfdを行わなければならない
+- 解決策
+    - S1内でpushad, pushfdを実行したあとのespの値を汎用レジスタのどれかに保存しておく
+    - S2を生成する際に，ret命令を見つけ出し，move esp, (選択した汎用レジスタ)の命令列に置き換える
+    - S2内でpopad, popfdを行うようにバイト列を追加する
+    - retを追加する
+    - このretではS1に戻るのではなく直接S1の呼び出し元に戻ることが可能
+---
 ## Windows Shellcode memo
 当プログラムには直接関係ないただのメモ
 
