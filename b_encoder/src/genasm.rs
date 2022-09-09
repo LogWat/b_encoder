@@ -8,8 +8,6 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
 
     asm.push_str("_start:\n");
     asm.push_str("    pushad\n");
-    asm.push_str("    pushfd\n");
-
 
     asm.push_str("register:\n");
     asm.push_str("    push 0x21\n");

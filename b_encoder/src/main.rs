@@ -93,14 +93,12 @@ fn main() -> std::io::Result<()> {
         let mut bytes: Vec<u8> = Vec::new();
         // find 0xC3 (ret) and replace it with:
         // 0x8B, 0xE1 (mov esp, ecx)
-        // 0x9D (popfd)
         // 0x61 (popad)
         // 0xC3 (ret)
         for b in raw_bytes {
             if b == "C3" || b == "c3" {
                 bytes.push(0x8B);
                 bytes.push(0xE1);
-                bytes.push(0x9D);
                 bytes.push(0x61);
                 bytes.push(0xC3);
             } else if b == "" {
