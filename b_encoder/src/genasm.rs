@@ -69,6 +69,7 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
     }
 
     asm.push_str("; jmp to shellcode\n");
+    asm.push_str("to_shellcode:\n");
     asm.push_str("    jmp esp\n"); // this isn't ASCII!!! NOO
 
     output.write_all(asm.as_bytes())

