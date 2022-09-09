@@ -1,24 +1,45 @@
 # b_encorder
 バイナリエンコーダー
-- 入力されたshellcodeバイト列(ファイル名指定)に対してASCII化エンコードを行い，出力するプログラム
-    - 変換後のACSII文字は，0x21(!) ~ 0x7E(~) である(DELなどの特殊文字は含まない)
-    - バイナリ命令列のバイト範囲を0x0 ~ 0xFFとすると(正確にはこの中でも限られるはずであるが)
-    ASCIIの文字範囲を超えてしまう -> 2byte((0x7E-0x21+0x1)^2)使用することで解決
-    - 与えられたバイト列を4bit*2に分割，そのそれぞれについてASCIIに変換
-        - 0x00 ~ 0xFの16種類のASCII文字だけが必要となる
-        - 0x61('a') ~ 0x7e('~')への変換が行える
-        - オプションにより変換後のASCII文字範囲を変更することができる
-            - 与える値は，0x00をどれほどシフトするかという値となる
-            - 0x22を与えた場合，変換後のshellcodeは0x22('"') ~ 0x31('1')となる
-    - 変換後のshellcodeの終端には，0x20(space)及びencode後のshellcode全体のハッシュ値が付与される
-        - decode時には，まずencodeされたshellcodeからハッシュ値を導き，終端に付与された値と比較する
-        - もし付与されているハッシュ値と一致しない場合には実行を終了
-- 生成されたShellcodeを実行するためには，デコーダを先頭に付与する必要がある(decode.asm)
+
+- alphanumeric shellcodeとは異なり，このプログラムではASCII文字 0x21(!) ~ 0x7E(~)への変換を行う
+    - 与えられたshellcodeをスタックに展開する方式(Option: -e a)と与えられたshellcodeが
+    スタック上に展開されることを前提に直接それを書き換えていく方式(Option: -e p)が利用できる
+
+- スタック展開式
+    - 与えられた命令列からスタックに変換した命令列を積んでいく
+    - その際の命令列がASCII文字範囲となるようにする
+    - 最終的にjmp esp によって与えられたshellcodeを実行するようにする
+    - 使える命令列は http://ref.x86asm.net/coder32.html を参考にした
+
+- ポリモーフィック式
+    - 与えられた命令列をASCII文字範囲内になるようにencodeし，デコーダ(decode.asm)の直下に付与したものを出力
+        - この方式では，出力形式をバイト列 or 文字列で選択可能
+    - 実行時には，デコーダによってencodeされたshellcodeを復元し，その後与えられたshellcodeが実行される
 
 - nasm -f elf32 a.asm ; ld -melf_i386 -o a a.o
 - objdump -d ./*** |grep '[0-9a-f]:'|grep -v 'file'|cut -f2 -d:|cut -f1-7 -d' '|tr -s ' '|tr '\t' ' '|sed 's/ $//g'|sed 's/ /\\ x/g'|paste -d '' -s |sed 's/^/"/'|sed 's/$/"/g' | grep "\\x00"
 
 - **逆アセンブルされればすぐに分かる小細工程度のプログラム(遊戯用)**
+
+使える命令郡(順次追加)
+|po|nemonic|op|
+|:---:|:---:|:---:|
+|0x24|and|al, imm8|
+|0x25|and|eax, imm32|
+|0x67|and|r/m16/32/r16/32|r16/32/r/m16/32|
+
+---
+- shellcodeをstackにpushする方式の場合の問題点
+    - stackにpushしていくために実行されるshellcodeをS1とする
+    - stack上に展開されたshellcodeをS2とする
+        - S2内でretが呼び出されてもespはS2の先頭を指しているはずなので正常に戻れない
+        - S1でpushad, pushfdを呼び出した場合，S2でその分のpopad, popfdを行わなければならない
+- 解決策
+    - S1内でpushad, pushfdを実行したあとのespの値を汎用レジスタのどれかに保存しておく
+    - S2を生成する際に，ret命令を見つけ出し，move esp, (選択した汎用レジスタ)の命令列に置き換える
+    - S2内でpopad, popfdを行うようにバイト列を追加する
+    - retを追加する
+    - このretではS1に戻るのではなく直接S1の呼び出し元に戻ることが可能
 ---
 ## Windows Shellcode memo
 当プログラムには直接関係ないただのメモ
