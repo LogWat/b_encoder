@@ -87,9 +87,9 @@ fn main() -> std::io::Result<()> {
         }
     };
 
+    let raw_bytes = input.split("\\x").collect::<Vec<&str>>();
     // TYPE SELECTION (0: ASCII, 1: Polymorphic)
     if etype == 0 {
-        let raw_bytes = input.split("\\x").collect::<Vec<&str>>();
         let mut bytes: Vec<u8> = Vec::new();
         // find 0xC3 (ret) and replace it with:
         // 0x8B, 0xE1 (mov esp, ecx)
@@ -159,8 +159,23 @@ fn main() -> std::io::Result<()> {
                 return Ok(());
             }
         }
-        
+
     } else {
+        let mut bytes: Vec<u8> = Vec::new();
+        for b in raw_bytes {
+            if b == "" {
+                continue;
+            } else {
+                match u8::from_str_radix(b, 16) {
+                    Ok(b) => bytes.push(b),
+                    Err(e) => {
+                        eprintln!("Failed to parse input file: {}", e);
+                        return Ok(());
+                    }
+                }
+            }
+        }
+
         // encode
         let shift: u8 = match u8::from_str_radix(&opts.num[2..], 16) {
             Ok(shift) => {
