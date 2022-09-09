@@ -2,17 +2,26 @@
 バイナリエンコーダー
 
 - alphanumeric shellcodeとは異なり，このプログラムではASCII文字 0x21(!) ~ 0x7E(~)への変換を行う
+    - 与えられたshellcodeをスタックに展開する方式(Option: -e a)と与えられたshellcodeが
+    スタック上に展開されることを前提に直接それを書き換えていく方式(Option: -e p)が利用できる
+
+- スタック展開式
     - 与えられた命令列からスタックに変換した命令列を積んでいく
     - その際の命令列がASCII文字範囲となるようにする
     - 最終的にjmp esp によって与えられたshellcodeを実行するようにする
     - 使える命令列は http://ref.x86asm.net/coder32.html を参考にした
+
+- ポリモーフィック式
+    - 与えられた命令列をASCII文字範囲内になるようにencodeし，デコーダ(decode.asm)の直下に付与したものを出力
+        - この方式では，出力形式をバイト列 or 文字列で選択可能
+    - 実行時には，デコーダによってencodeされたshellcodeを復元し，その後与えられたshellcodeが実行される
 
 - nasm -f elf32 a.asm ; ld -melf_i386 -o a a.o
 - objdump -d ./*** |grep '[0-9a-f]:'|grep -v 'file'|cut -f2 -d:|cut -f1-7 -d' '|tr -s ' '|tr '\t' ' '|sed 's/ $//g'|sed 's/ /\\ x/g'|paste -d '' -s |sed 's/^/"/'|sed 's/$/"/g' | grep "\\x00"
 
 - **逆アセンブルされればすぐに分かる小細工程度のプログラム(遊戯用)**
 
-使えそうなやつら
+使える命令郡(順次追加)
 |po|nemonic|op|
 |:---:|:---:|:---:|
 |0x24|and|al, imm8|
