@@ -1,4 +1,12 @@
+# ignore binary files
+*
+!*.*
+
 *.exe
 *.bin
 *.o
+in
+*.st
+peda*
+*gdb*
 b_encoder/target

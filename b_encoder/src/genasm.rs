@@ -37,12 +37,14 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
             if *stand != 0xFFFFFFFF as u32 {
                 asm.push_str("    push esp\n");
                 asm.push_str("    pop edx\n");
-                for j in (0..4).rev() {
+                for j in 0..4 {
                     if stand & (0xFF << (j * 8)) == 0x00000000 as u32 {
                         asm.push_str("    xor [edx], bh\n");
                         cnt += 1; // if "inc edx" is needed or not
                         if cnt > fcnt - 2 { break; }
                         asm.push_str("    inc edx\n"); 
+                    } else {
+                        asm.push_str("    inc edx\n");
                     }
                 }
             }
@@ -54,12 +56,14 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
             if *stand != 0x00000000 as u32 {
                 asm.push_str("    push esp\n");
                 asm.push_str("    pop edx\n");
-                for j in (0..4).rev() {
+                for j in 0..4 {
                     if stand & (0xFF << (j * 8)) != 0x00000000 as u32 {
                         asm.push_str("    xor [edx], bh\n");
                         cnt += 1;
                         if cnt > fcnt { break; }
                         asm.push_str("    inc edx\n"); 
+                    } else {
+                        asm.push_str("    inc edx\n");
                     }
                 }
             }
