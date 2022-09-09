@@ -16,6 +16,8 @@ struct Opts {
     format: String,
     #[clap(short = 'n', long = "num", default_value = "0x21", help = "Number to encode")]
     num: String,
+    #[clap(short = 'e', long = "encode", default_value = "a", help = "Type of encoding (a: ASCII, p: Polymorphic)")]
+    encode: String,
 }
 
 fn ror32(num: u32, r: u32) -> u32 {
@@ -76,148 +78,159 @@ fn main() -> std::io::Result<()> {
             return Ok(());
         }
     };
-
-    let raw_bytes = input.split("\\x").collect::<Vec<&str>>();
-    let mut bytes: Vec<u8> = Vec::new();
-    // find 0xC3 (ret) and replace it with:
-    // 0x8B, 0xE1 (mov esp, ecx)
-    // 0x9D (popfd)
-    // 0x61 (popad)
-    // 0xC3 (ret)
-    for b in raw_bytes {
-        if b == "C3" || b == "c3" {
-            bytes.push(0x8B);
-            bytes.push(0xE1);
-            bytes.push(0x9D);
-            bytes.push(0x61);
-            bytes.push(0xC3);
-        } else if b == "" {
-            continue;
-        } else {
-            match u8::from_str_radix(b, 16) {
-                Ok(b) => bytes.push(b),
-                Err(e) => {
-                    eprintln!("Failed to parse input file: {}", e);
-                    return Ok(());
-                }
-            }
-        }
-    }
-
-    let mut ascii_bytes_set: Vec<(u32, u32, u32)> = Vec::new();
-    for (i, b) in bytes.iter().enumerate() {
-        if (i + 1) % 4 == 0 {
-            let mut tmp: u32 = 0;
-            tmp |= *b as u32;
-            tmp |= (bytes[i - 1] as u32) << 8;
-            tmp |= (bytes[i - 2] as u32) << 16;
-            tmp |= (bytes[i - 3] as u32) << 24;
-            let (stand, num1, num2) = split_to_ascii(tmp);
-            ascii_bytes_set.push((stand, num1, num2));
-        }
-
-        // if the length of bytes is not a multiple of 4, add 0x90 (nop) to the end of bytes
-        if (i + 1) == bytes.len() && (i + 1) % 4 != 0 {
-            let mut tmp: u32 = 0;
-            for j in 0..4 {
-                if j >= 4 - (i + 1) % 4 {
-                    tmp |= (bytes[i - j] as u32) << (j * 8);
-                } else {
-                    tmp |= 0x90 << (j * 8);
-                }
-            }
-            let (stand, num1, num2) = split_to_ascii(tmp);
-            ascii_bytes_set.push((stand, num1, num2));
-        }
-    }
-
-    // ASM TEST !!!
-    let mut asm_outputfile = match fs::File::create("asm_output.asm") {
-        Ok(output) => {
-            output
-        },
-        Err(e) => {
-            eprintln!("Failed to create asm_output.asm: {}", e);
+    let etype = match opts.encode.as_str() {
+        "a" => 0,
+        "p" => 1,
+        _ => {
+            eprintln!("Invalid encoding type: {}", opts.encode);
             return Ok(());
         }
     };
-    match genasm::generate_asm(&ascii_bytes_set, &mut asm_outputfile) {
-        Ok(_) => {},
-        Err(e) => {
-            eprintln!("Failed to generate asm: {}", e);
-            return Ok(());
-        }
-    }
 
-    // encode
-    let shift: u8 = match u8::from_str_radix(&opts.num[2..], 16) {
-        Ok(shift) => {
-            if shift < 0x21 || shift > 0x6F {
-                eprintln!("Valid shift is between 0x21 and 0x6F");
+    // TYPE SELECTION (0: ASCII, 1: Polymorphic)
+    if etype == 0 {
+        let raw_bytes = input.split("\\x").collect::<Vec<&str>>();
+        let mut bytes: Vec<u8> = Vec::new();
+        // find 0xC3 (ret) and replace it with:
+        // 0x8B, 0xE1 (mov esp, ecx)
+        // 0x9D (popfd)
+        // 0x61 (popad)
+        // 0xC3 (ret)
+        for b in raw_bytes {
+            if b == "C3" || b == "c3" {
+                bytes.push(0x8B);
+                bytes.push(0xE1);
+                bytes.push(0x9D);
+                bytes.push(0x61);
+                bytes.push(0xC3);
+            } else if b == "" {
+                continue;
+            } else {
+                match u8::from_str_radix(b, 16) {
+                    Ok(b) => bytes.push(b),
+                    Err(e) => {
+                        eprintln!("Failed to parse input file: {}", e);
+                        return Ok(());
+                    }
+                }
+            }
+        }
+    
+        let mut ascii_bytes_set: Vec<(u32, u32, u32)> = Vec::new();
+        for (i, b) in bytes.iter().enumerate() {
+            if (i + 1) % 4 == 0 {
+                let mut tmp: u32 = 0;
+                tmp |= *b as u32;
+                tmp |= (bytes[i - 1] as u32) << 8;
+                tmp |= (bytes[i - 2] as u32) << 16;
+                tmp |= (bytes[i - 3] as u32) << 24;
+                let (stand, num1, num2) = split_to_ascii(tmp);
+                ascii_bytes_set.push((stand, num1, num2));
+            }
+    
+            // if the length of bytes is not a multiple of 4, add 0x90 (nop) to the end of bytes
+            if (i + 1) == bytes.len() && (i + 1) % 4 != 0 {
+                let mut tmp: u32 = 0;
+                for j in 0..4 {
+                    if j >= 4 - (i + 1) % 4 {
+                        tmp |= (bytes[i - j] as u32) << (j * 8);
+                    } else {
+                        tmp |= 0x90 << (j * 8);
+                    }
+                }
+                let (stand, num1, num2) = split_to_ascii(tmp);
+                ascii_bytes_set.push((stand, num1, num2));
+            }
+        }
+    
+        let mut asm_outputfile = match fs::File::create("asm_output.asm") {
+            Ok(output) => {
+                output
+            },
+            Err(e) => {
+                eprintln!("Failed to create asm_output.asm: {}", e);
                 return Ok(());
             }
-            shift
-        }
-        Err(e) => {
-            println!("Fail to parse number {}: {}", opts.num, e);
-            return Ok(());
-        }
-    };
-    match opts.format.as_ref() {
-        "binary" => {
-            output.write(&[0x0a])?; // insert lf for formatting
-        }
-        "hex" => {
-            output.write(b"\\x0a")?;
-        }
-        _ => {
-            println!("Invalid format. Must be binary or hex");
-            return Ok(());
-        }
-    }
-
-    let mut encoded_hash: u32 = 0;
-    let mut lf_cnt: u32 = 0;
-    for b in bytes {
-        let mut b0 = b % 0x10;
-        let mut b1 = b / 0x10;
-        b0 += shift;
-        b1 += shift;
-
-        // cal hash
-        encoded_hash = ror32(encoded_hash, 0x17);
-        encoded_hash += b1 as u32;
-        encoded_hash = ror32(encoded_hash, 0x17);
-        encoded_hash += b0 as u32;
-
-        if opts.format == "binary" {
-            output.write(&[b1, b0])?;
-        } else {
-            output.write(&format!("\\x{:x}\\x{:x}", b1, b0).as_bytes())?;
-        }
-
-        // insert LF at 21st char
-        lf_cnt += 1;
-        if lf_cnt == 20 {
-            if opts.format == "binary" {
-                output.write(&[0x0a])?;
-            } else {
-                output.write(&format!("\\x0a").as_bytes())?;
+        };
+        match genasm::generate_asm(&ascii_bytes_set, &mut asm_outputfile) {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("Failed to generate asm: {}", e);
+                return Ok(());
             }
-            lf_cnt = 0;
         }
-    }
-
-    println!("Hash: {:x}", encoded_hash);
-    // shellcode end with \x20(space) and hash
-    if opts.format == "binary" {
-        output.write(&[0x20])?;
-        // consider endianness
-        output.write(&encoded_hash.to_le_bytes())?;
+        
     } else {
-        output.write("\\x20".as_bytes())?;
-        // consider endianness
-        output.write(&format!("\\x{:x}\\x{:x}\\x{:x}\\x{:x}", (encoded_hash << 24 >> 24) as u8, (encoded_hash << 16 >> 24) as u8, (encoded_hash << 8 >> 24) as u8, (encoded_hash >> 24) as u8).as_bytes())?;
+        // encode
+        let shift: u8 = match u8::from_str_radix(&opts.num[2..], 16) {
+            Ok(shift) => {
+                if shift < 0x21 || shift > 0x6F {
+                    eprintln!("Valid shift is between 0x21 and 0x6F");
+                    return Ok(());
+                }
+                shift
+            }
+            Err(e) => {
+                println!("Fail to parse number {}: {}", opts.num, e);
+                return Ok(());
+            }
+        };
+        match opts.format.as_ref() {
+            "binary" => {
+                output.write(&[0x0a])?; // insert lf for formatting
+            }
+            "hex" => {
+                output.write(b"\\x0a")?;
+            }
+            _ => {
+                println!("Invalid format. Must be binary or hex");
+                return Ok(());
+            }
+        }
+
+        let mut encoded_hash: u32 = 0;
+        let mut lf_cnt: u32 = 0;
+        for b in bytes {
+            let mut b0 = b % 0x10;
+            let mut b1 = b / 0x10;
+            b0 += shift;
+            b1 += shift;
+
+            // cal hash
+            encoded_hash = ror32(encoded_hash, 0x17);
+            encoded_hash += b1 as u32;
+            encoded_hash = ror32(encoded_hash, 0x17);
+            encoded_hash += b0 as u32;
+
+            if opts.format == "binary" {
+                output.write(&[b1, b0])?;
+            } else {
+                output.write(&format!("\\x{:x}\\x{:x}", b1, b0).as_bytes())?;
+            }
+
+            // insert LF at 21st char
+            lf_cnt += 1;
+            if lf_cnt == 20 {
+                if opts.format == "binary" {
+                    output.write(&[0x0a])?;
+                } else {
+                    output.write(&format!("\\x0a").as_bytes())?;
+                }
+                lf_cnt = 0;
+            }
+        }
+
+        println!("Hash: {:x}", encoded_hash);
+        // shellcode end with \x20(space) and hash
+        if opts.format == "binary" {
+            output.write(&[0x20])?;
+            // consider endianness
+            output.write(&encoded_hash.to_le_bytes())?;
+        } else {
+            output.write("\\x20".as_bytes())?;
+            // consider endianness
+            output.write(&format!("\\x{:x}\\x{:x}\\x{:x}\\x{:x}", (encoded_hash << 24 >> 24) as u8, (encoded_hash << 16 >> 24) as u8, (encoded_hash << 8 >> 24) as u8, (encoded_hash >> 24) as u8).as_bytes())?;
+        }
     }
 
     Ok(())
