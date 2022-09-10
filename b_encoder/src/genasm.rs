@@ -40,28 +40,37 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
             asm.push_str("    push eax\n");
             if *stand != 0xFFFFFFFF as u32 {
                 for j in 0..4 {
-                    if stand & (0xFF << (j * 8)) == 0x00000000 as u32 {
+                    if j != 3 && stand & (0xFFFF << (j * 8)) == 0x00000000 as u32 {
+                        let idx: u8 = 0x30 + (j as u8);
+                        asm.push_str(&format!("    xor [esp + esi + 0x{:02x}], cx\n", idx));
+                        break; // there should be no more than 2 0xFF
+                    } else if stand & (0xFF << (j * 8)) == 0x00000000 as u32 {
                         let idx: u8 = 0x30 + (j as u8);
                         asm.push_str(&format!("    xor [esp + esi + 0x{:02x}], ch\n", idx));
                     }
                 }
             }
         } else {
-            asm.push_str(&format!("    push 0x{:08x}\n", num1));
-            asm.push_str("    pop eax\n");
-            asm.push_str(&format!("    xor eax, 0x{:08x}\n", num2));
-            asm.push_str("    push eax\n");
-            // 特例: stand = 0x0000FFFF
-            // esp直接参照xor式 = 8 bytes, edx inc式 = 7 bytes
-            if *stand == 0x0000FFFF as u32 {
-                asm.push_str("    push esp\n");
-                asm.push_str("    pop edx\n");
-                asm.push_str("    xor [edx], ch\n");
-                asm.push_str("    inc edx\n");
-                asm.push_str("    xor [edx], ch\n");
-            } else if *stand != 0x00000000 as u32 {
+            // 特例: stand = 0xFF0000FF
+            // 0xFFFFFFFFのxorで反転させ，0x0000に対してxorすれば1回のxorで済む
+            if *stand == 0xFF0000FF as u32 {
+                asm.push_str("    push ecx\n");
+                asm.push_str("    pop eax\n");
+                asm.push_str(&format!("    xor eax, 0x{:08x}\n", num1));
+                asm.push_str(&format!("    xor eax, 0x{:08x}\n", num2));
+                asm.push_str("    push eax\n");
+                asm.push_str("    xor [esp + esi + 0x31], cx\n");
+            } else {
+                asm.push_str(&format!("    push 0x{:08x}\n", num1));
+                asm.push_str("    pop eax\n");
+                asm.push_str(&format!("    xor eax, 0x{:08x}\n", num2));
+                asm.push_str("    push eax\n");
                 for j in 0..4 {
-                    if stand & (0xFF << (j * 8)) != 0x00000000 as u32 {
+                    if j != 3 && stand & (0xFFFF << (j * 8)) == 0xFFFF << (j * 8) {
+                        let idx: u8 = 0x30 + (j as u8);
+                        asm.push_str(&format!("    xor [esp + esi + 0x{:02x}], cx\n", idx));
+                        break; // there should be no more than 2 0xFF
+                    } else if stand & (0xFF << (j * 8)) == 0xFF << (j * 8) {
                         let idx: u8 = 0x30 + (j as u8);
                         asm.push_str(&format!("    xor [esp + esi + 0x{:02x}], ch\n", idx));
                     }
