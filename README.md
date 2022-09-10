@@ -27,6 +27,7 @@
 |0x24|and|al, imm8|
 |0x25|and|eax, imm32|
 |0x67|and|r/m16/32/r16/32|r16/32/r/m16/32|
+|0x67|xor|r/m16/32, edi, esi|
 
 ---
 - shellcodeをstackにpushする方式の場合の問題点
@@ -88,9 +89,16 @@
         15. base + (14) -> Address of 目的関数!!!
 
 ---
-## ネタ帳
+## メモ
 - encodeした結果の末尾に，shellcode全体のハッシュ値を署名として付与してもおもしろそう
     - decodeの際にまずそのハッシュ値を確認させる
+
+- asm生成時の命令数をなるべく減らすために考えたこと
+    - 0x80よりも大きい数値をスタック上にpushする際には，0xFFのxorが必要
+        - 4byte単位でスタックにpushするが，それに対応する0xFFを1byteずつxorしなければならない
+        - もし0xFFをxorするべきbyteが連続している場合，word単位，dword単位でxorしたい
+        - スタックにpushしたい4byteのすべてについて0xFFのxorが必要ならば, まず0xFFFFFFFFをスタックにpush
+        - スタックにpushしたい4byteのうち，0xFFのxorが必要なbyte数が2より大きい場合も同様
 
 ## ASCII-Shellcode-Tech
 - ASCII-Shellcodeとは，Shellcodeをバイナリ文字列にしたときに，すべてASCII文字(0x30 ~ 0x7A)の範囲で表せるようなもの
