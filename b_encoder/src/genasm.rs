@@ -9,13 +9,20 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
     asm.push_str("_start:\n");
     asm.push_str("    pushad\n");
 
+    // eax = any
+    // ebx = 0xFFFFFFFF : for xor
+    // ecx = original esp
+    // esi = -0x30(-48) ~ -0x36(-54) : for index ([esp + esi + xxx])
     asm.push_str("register:\n");
     asm.push_str("    push 0x21\n");
     asm.push_str("    pop eax\n");
     asm.push_str("    xor al , 0x21\n"); // eax = 0x00
+    asm.push_str("    dec eax\n");       // eax = 0xFFFFFFFF
     asm.push_str("    push eax\n");
-    asm.push_str("    pop ebx\n");       // ebx = 0x00
-    asm.push_str("    dec ebx\n");       // ebx = 0xFFFFFFFF
+    asm.push_str("    xor al, 0x2f\n"); // <============================ random ?
+    asm.push_str("    push eax\n");
+    asm.push_str("    pop esi\n");       // esi = 0xFFFFFFFF ^ 0x2f = 0xFFFFFFD0 (-48)
+    asm.push_str("    pop ebx\n");       // ebx = 0xFFFFFFFF
     asm.push_str("    push esp\n");
     asm.push_str("    pop ecx\n");       // ecx = original esp + all registers
 
@@ -24,7 +31,6 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
         asm.push_str(&format!("; push 0x{:08x}\n", stand ^ num1 ^ num2)); // comment
         // count bits of stand
         let fcnt = stand.count_ones() / 8;
-        let mut cnt = 1; 
         // if the num of 0xFF in stand is over 2, push 0xFFFFFFFF first
         if fcnt > 2 {
             asm.push_str("    push ebx\n");
@@ -33,16 +39,10 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
             asm.push_str(&format!("    xor eax, 0x{:08x}\n", num2));
             asm.push_str("    push eax\n");
             if *stand != 0xFFFFFFFF as u32 {
-                asm.push_str("    push esp\n");
-                asm.push_str("    pop edx\n");
                 for j in 0..4 {
                     if stand & (0xFF << (j * 8)) == 0x00000000 as u32 {
-                        asm.push_str("    xor [edx], bh\n");
-                        cnt += 1; // if "inc edx" is needed or not
-                        if cnt > fcnt - 2 { break; }
-                        asm.push_str("    inc edx\n"); 
-                    } else {
-                        asm.push_str("    inc edx\n");
+                        let idx: u8 = 0x30 + (j as u8);
+                        asm.push_str(&format!("    xor [esp + esi + 0x{:02x}], bh\n", idx));
                     }
                 }
             }
@@ -51,17 +51,19 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
             asm.push_str("    pop eax\n");
             asm.push_str(&format!("    xor eax, 0x{:08x}\n", num2));
             asm.push_str("    push eax\n");
-            if *stand != 0x00000000 as u32 {
+            // 特例: stand = 0x0000FFFF
+            // esp直接参照xor式 = 8 bytes, edx inc式 = 7 bytes
+            if *stand == 0x0000FFFF as u32 {
                 asm.push_str("    push esp\n");
                 asm.push_str("    pop edx\n");
+                asm.push_str("    xor [edx], bh\n");
+                asm.push_str("    inc edx\n");
+                asm.push_str("    xor [edx], bh\n");
+            } else if *stand != 0x00000000 as u32 {
                 for j in 0..4 {
                     if stand & (0xFF << (j * 8)) != 0x00000000 as u32 {
-                        asm.push_str("    xor [edx], bh\n");
-                        cnt += 1;
-                        if cnt > fcnt { break; }
-                        asm.push_str("    inc edx\n"); 
-                    } else {
-                        asm.push_str("    inc edx\n");
+                        let idx: u8 = 0x30 + (j as u8);
+                        asm.push_str(&format!("    xor [esp + esi + 0x{:02x}], bh\n", idx));
                     }
                 }
             }

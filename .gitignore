@@ -10,3 +10,4 @@ in
 peda*
 *gdb*
 b_encoder/target
+*.bak
