@@ -92,13 +92,13 @@ fn main() -> std::io::Result<()> {
     if etype == 0 {
         let mut bytes: Vec<u8> = Vec::new();
         // find 0xC3 (ret) and replace it with:
-        // 0x8B, 0xE1 (mov esp, ecx)
-        // 0x61 (popad)
+        // 0x8B, 0xE3 (mov esp, ebx)
+        // 0x61 (popad) <= this is for pushad in encoder shellcode
         // 0xC3 (ret)
         for b in raw_bytes {
             if b == "C3" || b == "c3" {
                 bytes.push(0x8B);
-                bytes.push(0xE1);
+                bytes.push(0xE3);
                 bytes.push(0x61);
                 bytes.push(0xC3);
             } else if b == "" {
