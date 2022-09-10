@@ -16,9 +16,6 @@
         - この方式では，出力形式をバイト列 or 文字列で選択可能
     - 実行時には，デコーダによってencodeされたshellcodeを復元し，その後与えられたshellcodeが実行される
 
-- nasm -f elf32 a.asm ; ld -melf_i386 -o a a.o
-- objdump -d ./*** |grep '[0-9a-f]:'|grep -v 'file'|cut -f2 -d:|cut -f1-7 -d' '|tr -s ' '|tr '\t' ' '|sed 's/ $//g'|sed 's/ /\\ x/g'|paste -d '' -s |sed 's/^/"/'|sed 's/$/"/g' | grep "\\x00"
-
 - **逆アセンブルされればすぐに分かる小細工程度のプログラム(遊戯用)**
 
 使える命令郡(順次追加)
@@ -99,6 +96,9 @@
         - もし0xFFをxorするべきbyteが連続している場合，word単位，dword単位でxorしたい
         - スタックにpushしたい4byteのすべてについて0xFFのxorが必要ならば, まず0xFFFFFFFFをスタックにpush
         - スタックにpushしたい4byteのうち，0xFFのxorが必要なbyte数が2より大きい場合も同様
+
+- nasm -f elf32 a.asm ; ld -melf_i386 -o a a.o
+- objdump -d ./*** |grep '[0-9a-f]:'|grep -v 'file'|cut -f2 -d:|cut -f1-7 -d' '|tr -s ' '|tr '\t' ' '|sed 's/ $//g'|sed 's/ /\\ x/g'|paste -d '' -s |sed 's/^/"/'|sed 's/$/"/g' | grep "\\x00"
 
 ## ASCII-Shellcode-Tech
 - ASCII-Shellcodeとは，Shellcodeをバイナリ文字列にしたときに，すべてASCII文字(0x30 ~ 0x7A)の範囲で表せるようなもの
