@@ -1,13 +1,17 @@
-# ignore binary files
+# ignore extension-less files
 *
+!/**/
 !*.*
+
+b_encoder/*
+!b_encoder/*.*
 
 *.exe
 *.bin
 *.o
-in
-*.st
 peda*
 *gdb*
 b_encoder/target
 *.bak
+*.st
+in
