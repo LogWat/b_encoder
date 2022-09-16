@@ -18,6 +18,8 @@ struct Opts {
     num: String,
     #[clap(short = 'e', long = "encode", default_value = "a", help = "Type of encoding (a: ASCII, p: Polymorphic)")]
     encode: String,
+    #[clap(short = 'a', long = "arch", default_value = "x86", help = "Architecture (x86, x64)")]
+    arch: String,
 }
 
 fn ror32(num: u32, r: u32) -> u32 {
@@ -150,10 +152,28 @@ fn main() -> std::io::Result<()> {
                 return Ok(());
             }
         };
-        match genasm::generate_asm(&ascii_bytes_set, &mut asm_outputfile) {
-            Ok(_) => {},
-            Err(e) => {
-                eprintln!("Failed to generate asm: {}", e);
+
+        match opts.arch.as_str() {
+            "x86" => {
+                match genasm::generate_asm_x86(&ascii_bytes_set, &mut asm_outputfile) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        eprintln!("Failed to assemble x86: {}", e);
+                        return Ok(());
+                    }
+                }
+            },
+            "x64" => {
+                match genasm::generate_asm_x64(&ascii_bytes_set, &mut asm_outputfile) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        eprintln!("Failed to assemble x64: {}", e);
+                        return Ok(());
+                    }
+                }
+            },
+            _ => {
+                eprintln!("Invalid architecture: {}", opts.arch);
                 return Ok(());
             }
         }
