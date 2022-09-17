@@ -13,3 +13,4 @@ b_encoder/target
 *.bak
 *.st
 in
+*.obj
