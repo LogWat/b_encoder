@@ -1,7 +1,7 @@
 use std::fs;
 use std::io::prelude::*;
 
-pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std::io::Result<()> {
+pub fn generate_asm_x86(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std::io::Result<()> {
     let mut asm = String::new();
     asm.push_str("section .text\n\n");
     asm.push_str("global _start\n");
@@ -19,7 +19,7 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
     asm.push_str("    xor al , 0x21\n"); // eax = 0x00
     asm.push_str("    dec eax\n");       // eax = 0xFFFFFFFF
     asm.push_str("    push eax\n");
-    asm.push_str("    xor al, 0x2f\n"); // <============================ random ?
+    asm.push_str("    xor al, 0x2f\n");
     asm.push_str("    push eax\n");
     asm.push_str("    pop esi\n");       // esi = 0xFFFFFFFF ^ 0x2f = 0xFFFFFFD0 (-48)
     asm.push_str("    pop ecx\n");       // ecx = 0xFFFFFFFF
@@ -84,4 +84,34 @@ pub fn generate_asm(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std:
     asm.push_str("    jmp esp\n"); // this isn't ASCII!!! NOO
 
     output.write_all(asm.as_bytes())
+}
+
+pub fn generate_asm_x64(bytes: &Vec<(u32, u32, u32)>, output: &mut fs::File) -> std::io::Result<()> {
+    let mut asm = String::new();
+    asm.push_str("section .text\n\n");
+    asm.push_str("global _start\n");
+
+    asm.push_str("_start:\n");
+    asm.push_str("    push rax\n");
+    asm.push_str("    push rcx\n");
+    asm.push_str("    push rdx\n");
+    asm.push_str("    push rbx\n");
+    asm.push_str("    push rsi\n");
+
+    asm.push_str("register:\n");
+    asm.push_str("    push 0x21\n");
+    asm.push_str("    pop rax\n");
+    asm.push_str("    xor al , 0x21\n"); // rax = 0x00
+    asm.push_str("    dec rax\n");       // rax = 0xFFFFFFFF_FFFFFFFF
+    asm.push_str("    push rax\n");
+    asm.push_str("    xor al, 0x2f\n");  // rax ^= 0x2f = 0xFFFFFFFF_FFFFFFD0 (-48)
+    asm.push_str("    push rax\n");
+    asm.push_str("    pop rsi\n");       // rsi = 0xFFFFFFFF_FFFFFFD0 (-48)
+    asm.push_str("    pop rcx\n");       // rcx = 0xFFFFFFFF_FFFFFFFF
+    asm.push_str("    push rsp\n");
+    asm.push_str("    pop rbx\n");       // rbx = original rsp + some registers
+
+
+    
+    Ok(())
 }
