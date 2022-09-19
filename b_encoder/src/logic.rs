@@ -5,7 +5,7 @@ pub enum StackSize {
     X64(u64),
 }
 
-pub fn change_bytes_to_stack_size(bytes: &Vec<u8>, arch: usize) -> Result<&Vec<StackSize>, String> {
+pub fn change_bytes_to_stack_size(bytes: &Vec<u8>, arch: usize) -> Result<Vec<StackSize>, String> {
     let mut stack_bytes: Vec<StackSize> = Vec::new();
     for (i, b) in bytes.iter().enumerate() {
 
@@ -52,7 +52,7 @@ pub fn change_bytes_to_stack_size(bytes: &Vec<u8>, arch: usize) -> Result<&Vec<S
         }
     }
 
-    Ok(&stack_bytes)
+    Ok(stack_bytes)
 }
 
 

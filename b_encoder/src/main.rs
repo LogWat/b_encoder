@@ -4,6 +4,9 @@ use clap::Parser;
 use rand::Rng;
 
 mod genasm;
+mod logic;
+
+use logic::StackSize;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -88,6 +91,14 @@ fn main() -> std::io::Result<()> {
             return Ok(());
         }
     };
+    let arch = match opts.arch.as_str() {
+        "x86" => 0,
+        "x64" => 1,
+        _ => {
+            eprintln!("Invalid architecture: {}", opts.arch);
+            return Ok(());
+        }
+    };
 
     let raw_bytes = input.split("\\x").collect::<Vec<&str>>();
     // TYPE SELECTION (0: ASCII, 1: Polymorphic)
@@ -116,31 +127,17 @@ fn main() -> std::io::Result<()> {
             }
         }
     
-        let mut ascii_bytes_set: Vec<(u32, u32, u32)> = Vec::new();
-        for (i, b) in bytes.iter().enumerate() {
-            if (i + 1) % 4 == 0 {
-                let mut tmp: u32 = 0;
-                tmp |= *b as u32;
-                tmp |= (bytes[i - 1] as u32) << 8;
-                tmp |= (bytes[i - 2] as u32) << 16;
-                tmp |= (bytes[i - 3] as u32) << 24;
-                let (stand, num1, num2) = split_to_ascii(tmp);
-                ascii_bytes_set.push((stand, num1, num2));
+        let mut ascii_bytes_set: Vec<(StackSize, StackSize, StackSize)> = Vec::new();
+        let stack_bytes = match logic::change_bytes_to_stack_size(&bytes, arch) {
+            Ok(stack_bytes) => stack_bytes,
+            Err(e) => {
+                eprintln!("Failed to change bytes to stack size: {}", e);
+                return Ok(());
             }
-    
-            // if the length of bytes is not a multiple of 4, add 0x90 (nop) to the end of bytes
-            if (i + 1) == bytes.len() && (i + 1) % 4 != 0 {
-                let mut tmp: u32 = 0;
-                for j in 0..4 {
-                    if j >= 4 - (i + 1) % 4 {
-                        tmp |= (bytes[i - j] as u32) << (j * 8);
-                    } else {
-                        tmp |= 0x90 << (j * 8);
-                    }
-                }
-                let (stand, num1, num2) = split_to_ascii(tmp);
-                ascii_bytes_set.push((stand, num1, num2));
-            }
+        };
+        for stack_byte in stack_bytes {
+            let (stand, num1, num2) = logic::split_bytes_to_ascii(stack_byte);
+            ascii_bytes_set.push((stand, num1, num2));
         }
     
         let mut asm_outputfile = match fs::File::create("asm_output.asm") {
@@ -153,28 +150,21 @@ fn main() -> std::io::Result<()> {
             }
         };
 
-        match opts.arch.as_str() {
-            "x86" => {
-                match genasm::generate_asm_x86(&ascii_bytes_set, &mut asm_outputfile) {
-                    Ok(_) => {},
-                    Err(e) => {
-                        eprintln!("Failed to assemble x86: {}", e);
-                        return Ok(());
-                    }
+        if arch == 0 {
+            match genasm::generate_asm_x86(&ascii_bytes_set, &mut asm_outputfile) {
+                Ok(_) => {},
+                Err(e) => {
+                    eprintln!("Failed to assemble x86: {}", e);
+                    return Ok(());
                 }
-            },
-            "x64" => {
-                match genasm::generate_asm_x64(&ascii_bytes_set, &mut asm_outputfile) {
-                    Ok(_) => {},
-                    Err(e) => {
-                        eprintln!("Failed to assemble x64: {}", e);
-                        return Ok(());
-                    }
+            }
+        } else {
+            match genasm::generate_asm_x64(&ascii_bytes_set, &mut asm_outputfile) {
+                Ok(_) => {},
+                Err(e) => {
+                    eprintln!("Failed to assemble x64: {}", e);
+                    return Ok(());
                 }
-            },
-            _ => {
-                eprintln!("Invalid architecture: {}", opts.arch);
-                return Ok(());
             }
         }
 
