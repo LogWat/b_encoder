@@ -105,15 +105,33 @@ fn main() -> std::io::Result<()> {
     if etype == 0 {
         let mut bytes: Vec<u8> = Vec::new();
         // find 0xC3 (ret) and replace it with:
+        // 32bit (x86)
         // 0x8B, 0xE3 (mov esp, ebx)
         // 0x61 (popad) <= this is for pushad in encoder shellcode
         // 0xC3 (ret)
+        // ----
+        // 64bit (x64)
+        // 0x48, 0x8B, 0xE3 (mov rsp, rbx)
+        // 0x5e, 0x5b, 0x5a, 0x59, 0x58 (pop rsi, pop rbx, pop rdx, pop rcx, pop rax)
+        // 0xC3 (ret)
         for b in raw_bytes {
             if b == "C3" || b == "c3" {
-                bytes.push(0x8B);
-                bytes.push(0xE3);
-                bytes.push(0x61);
-                bytes.push(0xC3);
+                if arch == 0 {
+                    bytes.push(0x8B);
+                    bytes.push(0xE3);
+                    bytes.push(0x61);
+                    bytes.push(0xC3);
+                } else {
+                    bytes.push(0x48);
+                    bytes.push(0x8B);
+                    bytes.push(0xE3);
+                    bytes.push(0x5E);
+                    bytes.push(0x5B);
+                    bytes.push(0x5A);
+                    bytes.push(0x59);
+                    bytes.push(0x58);
+                    bytes.push(0xC3);
+                }
             } else if b == "" {
                 continue;
             } else {
