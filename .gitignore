@@ -1,7 +1,7 @@
-# ignore extension-less files
-*
-!/**/
-!*.*
+asm/*
+!asm/*.*
+test/*
+!test/*.*
 *.exe
 *.bin
 *.o
