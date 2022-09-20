@@ -2,8 +2,6 @@
 *
 !/**/
 !*.*
-b_encoder/*
-!b_encoder/*.*
 *.exe
 *.bin
 *.o

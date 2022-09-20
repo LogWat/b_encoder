@@ -3,7 +3,7 @@ use std::io::prelude::*;
 
 use crate::logic::StackSize;
 use crate::asm_helper;
-use crate::asm_helper::{Reg8, Reg16, Reg32, Reg64, Register};
+use crate::asm_helper::{Reg16, Reg32, Reg64, Register};
 
 
 pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut fs::File) -> std::io::Result<()> {
@@ -97,6 +97,10 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                         );
                     }
                 }
+                
+                asm.push_str("; jmp to shellcode\n");
+                asm.push_str("to_shellcode:\n");
+                asm.push_str("    jmp esp\n");
             },
             (StackSize::X64(stand), StackSize::X64(num1), StackSize::X64(num2)) => {
                 // lower 32 bits
@@ -110,6 +114,7 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                 let unum2: u32  = (num2 / 0x100000000 as u64) as u32;
                 let ufcnt = lstand.count_ones() / 8;
 
+                // TODO: xorの最適化 <<<<<<<<<<<<<<<<<<<<<
                 if lfcnt > 2 && ufcnt > 2 {
                     asm.push_str("    push rcx\n");
                     
@@ -130,15 +135,74 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     asm.push_str(
                         xor_ff(ustand, false, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
                     );
+                } else if lfcnt > 2 && ufcnt < 2 {
+                    asm.push_str("    push ecx\n");
+
+                    // lower 4 bytes
+                    asm.push_str("    pop rax\n");
+                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum1));
+                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum2));
+                    asm.push_str("    push rax\n");
+                    asm.push_str(
+                        xor_ff(lstand, false, Register::Reg64(Reg64::RSI), Reg16::CX, 0x30 as u8).as_str()
+                    );
+
+                    // upper 4 bytes
+                    asm.push_str(&format!("    push 0x{:08x}\n", unum1));
+                    asm.push_str("    pop rax\n");
+                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum2));
+                    asm.push_str("    xor [rsp + rsi + 0x34], eax\n");
+                    asm.push_str(
+                        xor_ff(ustand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
+                    );
+                } else if lfcnt < 2 && ufcnt > 2 {
+                    // lower 4 bytes
+                    asm.push_str(&format!("    push 0x{:08x}\n", lnum1));
+                    asm.push_str("    pop rax\n");
+                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum2));
+                    asm.push_str("    push rax\n");
+                    asm.push_str(
+                        xor_ff(lstand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x30 as u8).as_str()
+                    );
+
+                    // upper 4 bytes
+                    asm.push_str("    push ecx\n");
+                    asm.push_str("    pop rax\n");
+                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum1));
+                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum2));
+                    asm.push_str("    xor [rsp + rsi + 0x34], eax\n");
+                    asm.push_str(
+                        xor_ff(ustand, false, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
+                    );
+                } else {
+                    // lower 4 bytes
+                    asm.push_str(&format!("    push 0x{:08x}\n", lnum1));
+                    asm.push_str("    pop rax\n");
+                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum2));
+                    asm.push_str("    push rax\n");
+                    asm.push_str(
+                        xor_ff(lstand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x30 as u8).as_str()
+                    );
+
+                    // upper 4 bytes
+                    asm.push_str(&format!("    push 0x{:08x}\n", unum1));
+                    asm.push_str("    pop rax\n");
+                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum2));
+                    asm.push_str("    xor [rsp + rsi + 0x34], eax\n");
+                    asm.push_str(
+                        xor_ff(ustand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
+                    );
                 }
 
-
+                asm.push_str("; jmp to shellcode\n");
+                asm.push_str("to_shellcode:\n");
+                asm.push_str("    jmp rsp\n");
             },
             _ => panic!("Invalid stack size"),
         }
     }
-    
-    Ok(())
+
+    output.write_all(asm.as_bytes())
 }
 
 // 0xFFをxorするasm列を生成する
@@ -154,8 +218,9 @@ fn xor_ff(stand: u32, flag: bool, register1: Register, register2: Reg16, idx_bas
         Register::Reg32(_) => "esp",
         _ => panic!("Invalid register"),
     };
-    let reg1: String = asm_helper::Reg_to_String(register1);
-    let reg2: String = asm_helper::Reg_to_String(Register::Reg16(register2));
+    let reg1: String = asm_helper::reg_to_string(register1);
+    let reg2: String = asm_helper::reg_to_string(Register::Reg16(register2));
+    let reg2_8: String = asm_helper::reg_to_string(Register::Reg8(asm_helper::reg16_to_reg8(register2)));
 
     if flag {
         if stand != 0x00000000 {
@@ -166,7 +231,7 @@ fn xor_ff(stand: u32, flag: bool, register1: Register, register2: Reg16, idx_bas
                     break; // there should be no more than 2 0xFF
                 } else if stand & (0xFF << (j * 8)) == 0xFF << (j * 8) {
                     let idx: u8 = idx_base + (j as u8);
-                    asm.push_str(&format!("    xor [{} + {} + 0x{:02x}], {}\n", stack_ptr, reg1, idx, reg2));
+                    asm.push_str(&format!("    xor [{} + {} + 0x{:02x}], {}\n", stack_ptr, reg1, idx, reg2_8));
                 }
             }
         }
@@ -179,7 +244,7 @@ fn xor_ff(stand: u32, flag: bool, register1: Register, register2: Reg16, idx_bas
                     break; // there should be no more than 2 0xFF
                 } else if stand & (0xFF << (j * 8)) == 0x00000000 {
                     let idx: u8 = idx_base + (j as u8);
-                    asm.push_str(&format!("    xor [{} + {} + 0x{:02x}], {}\n", stack_ptr, reg1, idx, reg2));
+                    asm.push_str(&format!("    xor [{} + {} + 0x{:02x}], {}\n", stack_ptr, reg1, idx, reg2_8));
                 }
             }
         }

@@ -1,10 +1,10 @@
 use std::fs;
 use std::io::prelude::*;
 use clap::Parser;
-use rand::Rng;
 
 mod genasm;
 mod logic;
+mod asm_helper;
 
 use logic::StackSize;
 
@@ -27,42 +27,6 @@ struct Opts {
 
 fn ror32(num: u32, r: u32) -> u32 {
     (num >> r) | (num << (32 - r))
-}
-
-// 0x???????? = (1) ^ (2) ^ (3) となるように
-// 与えられた0x????????を1, 2, 3に分解する
-// 1は0xFFと0x00の組み合わせ, 2, 3はともに0x21~0x7Fの範囲のバイトの組み合わせで表現
-// 1, 2, 3返却する
-fn split_to_ascii(byte_seq: u32) -> (u32, u32, u32) {
-    let bytes: [u8; 4] = byte_seq.to_le_bytes(); // consider little endian
-    let mut stand: u32 = 0;
-    let mut num1: u32 = 0;
-    let mut num2: u32 = 0;
-    for (i, b) in bytes.iter().enumerate() {
-        let mut tmp = *b as u8;
-        if *b >= 0x80 {
-            stand |= (0xFF << ((3 - i) * 8)) as u32;
-            tmp ^= 0xFF;
-        }
-        let mut candidates: Vec<(u8, u8)> = Vec::new();
-        for j in 0x21..0x7F {
-            for k in 0x21..0x7F {
-                if j ^ k == tmp {
-                    candidates.push((j, k));
-                }
-            }
-        }
-        let mut rng = rand::thread_rng();
-        let (j, k) = candidates[rng.gen_range(0..candidates.len())]; // TODO: 乱数で決定することは適切か検討する
-        num1 |= (j as u32) << ((3 - i) * 8);
-        num2 |= (k as u32) << ((3 - i) * 8);
-    }
-
-    let for_print: [u8; 4] = byte_seq.to_be_bytes();
-    println!("{:02X} {:02X} {:02X} {:02X} => 0x{:08X} = 0x{:08X} ^ 0x{:08X} ^ 0x{:08X}",
-    for_print[0], for_print[1], for_print[2], for_print[3], stand ^ num1 ^ num2, stand, num1, num2);
-
-    (stand, num1, num2)
 }
 
 fn main() -> std::io::Result<()> {
@@ -168,21 +132,11 @@ fn main() -> std::io::Result<()> {
             }
         };
 
-        if arch == 0 {
-            match genasm::generate_asm_x86(&ascii_bytes_set, &mut asm_outputfile) {
-                Ok(_) => {},
-                Err(e) => {
-                    eprintln!("Failed to assemble x86: {}", e);
-                    return Ok(());
-                }
-            }
-        } else {
-            match genasm::generate_asm_x64(&ascii_bytes_set, &mut asm_outputfile) {
-                Ok(_) => {},
-                Err(e) => {
-                    eprintln!("Failed to assemble x64: {}", e);
-                    return Ok(());
-                }
+        match genasm::generate_asm(&ascii_bytes_set, &mut asm_outputfile) {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("Failed to assemble: {}", e);
+                return Ok(());
             }
         }
 
