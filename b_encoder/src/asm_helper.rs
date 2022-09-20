@@ -1,3 +1,5 @@
+#[derive(Clone, Copy)]
+#[allow(dead_code)]
 pub enum Reg8 {
     AL,
     CL,
@@ -21,6 +23,7 @@ pub enum Reg8 {
     R15B,
 }
 
+#[derive(Clone, Copy)]
 pub enum Reg16 {
     AX,
     BX,
@@ -40,6 +43,7 @@ pub enum Reg16 {
     R15W,
 }
 
+#[derive(Clone, Copy)]
 pub enum Reg32 {
     EAX,
     EBX,
@@ -59,6 +63,8 @@ pub enum Reg32 {
     R15D,
 }
 
+#[derive(Clone, Copy)]
+#[allow(dead_code)]
 pub enum Reg64 {
     RAX,
     RBX,
@@ -78,6 +84,7 @@ pub enum Reg64 {
     R15,
 }
 
+#[derive(Clone, Copy)]
 pub enum Register {
     Reg8(Reg8),
     Reg16(Reg16),
@@ -85,7 +92,7 @@ pub enum Register {
     Reg64(Reg64),
 }
 
-pub fn Reg_to_String(reg: Register) -> String {
+pub fn reg_to_string(reg: Register) -> String {
     let reg_str = match reg {
         Register::Reg8(reg) => match reg {
             Reg8::AL => "al".to_string(),
@@ -166,4 +173,69 @@ pub fn Reg_to_String(reg: Register) -> String {
     };
     
     reg_str
+}
+
+pub fn reg16_to_reg8(reg: Reg16) -> Reg8 {
+    match reg {
+        Reg16::AX => Reg8::AL,
+        Reg16::BX => Reg8::BL,
+        Reg16::CX => Reg8::CL,
+        Reg16::DX => Reg8::DL,
+        Reg16::SI => Reg8::SIL,
+        Reg16::DI => Reg8::DIL,
+        Reg16::BP => Reg8::BPL,
+        Reg16::SP => Reg8::SPL,
+        Reg16::R8W => Reg8::R8B,
+        Reg16::R9W => Reg8::R9B,
+        Reg16::R10W => Reg8::R10B,
+        Reg16::R11W => Reg8::R11B,
+        Reg16::R12W => Reg8::R12B,
+        Reg16::R13W => Reg8::R13B,
+        Reg16::R14W => Reg8::R14B,
+        Reg16::R15W => Reg8::R15B,
+    }
+}
+
+#[allow(dead_code)]
+pub fn reg64_to_reg32(reg: Reg64) -> Reg32 {
+    match reg {
+        Reg64::RAX => Reg32::EAX,
+        Reg64::RBX => Reg32::EBX,
+        Reg64::RCX => Reg32::ECX,
+        Reg64::RDX => Reg32::EDX,
+        Reg64::RSI => Reg32::ESI,
+        Reg64::RDI => Reg32::EDI,
+        Reg64::RBP => Reg32::EBP,
+        Reg64::RSP => Reg32::ESP,
+        Reg64::R8 => Reg32::R8D,
+        Reg64::R9 => Reg32::R9D,
+        Reg64::R10 => Reg32::R10D,
+        Reg64::R11 => Reg32::R11D,
+        Reg64::R12 => Reg32::R12D,
+        Reg64::R13 => Reg32::R13D,
+        Reg64::R14 => Reg32::R14D,
+        Reg64::R15 => Reg32::R15D,
+    }
+}
+
+#[allow(dead_code)]
+pub fn reg32_to_reg16(reg: Reg32) -> Reg16 {
+    match reg {
+        Reg32::EAX => Reg16::AX,
+        Reg32::EBX => Reg16::BX,
+        Reg32::ECX => Reg16::CX,
+        Reg32::EDX => Reg16::DX,
+        Reg32::ESI => Reg16::SI,
+        Reg32::EDI => Reg16::DI,
+        Reg32::EBP => Reg16::BP,
+        Reg32::ESP => Reg16::SP,
+        Reg32::R8D => Reg16::R8W,
+        Reg32::R9D => Reg16::R9W,
+        Reg32::R10D => Reg16::R10W,
+        Reg32::R11D => Reg16::R11W,
+        Reg32::R12D => Reg16::R12W,
+        Reg32::R13D => Reg16::R13W,
+        Reg32::R14D => Reg16::R14W,
+        Reg32::R15D => Reg16::R15W,
+    }
 }
