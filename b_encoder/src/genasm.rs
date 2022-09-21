@@ -129,8 +129,8 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     
                     // lower 4 bytes
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum1));
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum2));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", lnum1));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", lnum2));
                     asm.push_str("    push rax\n");
                     asm.push_str(
                         xor_ff(lstand, false, Register::Reg64(Reg64::RSI), Reg16::CX, 0x30 as u8).as_str()
@@ -139,7 +139,7 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     // upper 4 bytes
                     asm.push_str(&format!("    push 0x{:08x}\n", unum1));
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum2));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", unum2));
                     asm.push_str("    xor [rsp + rsi + 0x34], eax\n");
                     asm.push_str(
                         xor_ff(ustand, false, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
@@ -150,8 +150,8 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
 
                     // lower 4 bytes
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum1));
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum2));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", lnum1));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", lnum2));
                     asm.push_str("    push rax\n");
                     asm.push_str(
                         xor_ff(lstand, false, Register::Reg64(Reg64::RSI), Reg16::CX, 0x30 as u8).as_str()
@@ -160,7 +160,7 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     // upper 4 bytes
                     asm.push_str(&format!("    push 0x{:08x}\n", unum1));
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum2));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", unum2));
                     asm.push_str("    xor [rsp + rsi + 0x34], eax\n");
                     asm.push_str(
                         xor_ff(ustand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
@@ -168,10 +168,11 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                 } else if lfcnt <= 2 && ufcnt > 2 {
                     // rdx = 0xFFFFFFFF_00000000
                     asm.push_str("    push rdx\n");
+
                     // lower 4 bytes
-                    asm.push_str(&format!("    push 0x{:08x}\n", lnum1));
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum2));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", lnum1));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", lnum2));
                     asm.push_str("    push rax\n");
                     asm.push_str(
                         xor_ff(lstand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x30 as u8).as_str()
@@ -180,7 +181,7 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     // upper 4 bytes
                     asm.push_str(&format!("    push 0x{:08x}\n", unum1));
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum2));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", unum2));
                     asm.push_str("    xor [rsp + rsi + 0x34], eax\n");
                     asm.push_str(
                         xor_ff(ustand, false, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
@@ -189,7 +190,7 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     // lower 4 bytes
                     asm.push_str(&format!("    push 0x{:08x}\n", lnum1));
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", lnum2));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", lnum2));
                     asm.push_str("    push rax\n");
                     asm.push_str(
                         xor_ff(lstand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x30 as u8).as_str()
@@ -198,7 +199,7 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     // upper 4 bytes
                     asm.push_str(&format!("    push 0x{:08x}\n", unum1));
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum2));
+                    asm.push_str(&format!("    xor rax, 0x{:08x}\n", unum2));
                     asm.push_str("    xor [rsp + rsi + 0x34], eax\n");
                     asm.push_str(
                         xor_ff(ustand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()

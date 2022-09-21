@@ -2,6 +2,8 @@ asm/*
 !asm/*.*
 test/*
 !test/*.*
+b_encoder/**/*
+!b_encoder/**/*.*
 *.exe
 *.bin
 *.o
