@@ -8,6 +8,7 @@ use crate::asm_helper::{Reg16, Reg32, Reg64, Register};
 
 pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut fs::File) -> std::io::Result<()> {
     let mut asm = String::new();
+    let mut arch = 0;
     for (i, values) in bytes.iter().rev().enumerate() {
         if i == 0 {  // init
             match values {
@@ -22,6 +23,7 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
 
             match values {
                 (StackSize::X86(_), StackSize::X86(_), StackSize::X86(_)) => {
+                    arch = 0;
                     asm.push_str("    pushad\n");
                     
                     asm.push_str("register:\n");
@@ -38,22 +40,29 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     asm.push_str("    pop ebx\n");       // ebx = original esp + all registers
                 },
                 (StackSize::X64(_), StackSize::X64(_), StackSize::X64(_)) => {
+                    arch = 1;
                     asm.push_str("    push rax\n");
                     asm.push_str("    push rcx\n");
                     asm.push_str("    push rdx\n");
                     asm.push_str("    push rbx\n");
                     asm.push_str("    push rsi\n");
+                    asm.push_str("    push rdi\n");
 
                     asm.push_str("register:\n");
-                    asm.push_str("    push 0x21\n");
+                    asm.push_str("    push 0x31323334\n");
                     asm.push_str("    pop rax\n");
-                    asm.push_str("    xor al , 0x21\n"); // rax = 0x00
-                    asm.push_str("    dec rax\n");       // rax = 0xFFFFFFFF_FFFFFFFF
+                    asm.push_str("    sub rax, 0x31323335\n"); // rax = 0xFFFFFFFF_FFFFFFFF
                     asm.push_str("    push rax\n");
                     asm.push_str("    xor al, 0x2f\n");  // rax ^= 0x2f = 0xFFFFFFFF_FFFFFFD0 (-48)
                     asm.push_str("    push rax\n");
                     asm.push_str("    pop rsi\n");       // rsi = 0xFFFFFFFF_FFFFFFD0 (-48)
                     asm.push_str("    pop rcx\n");       // rcx = 0xFFFFFFFF_FFFFFFFF
+                    asm.push_str("    push rcx\n");
+                    asm.push_str("    xor [rsp + rsi + 0x30], ecx\n");
+                    asm.push_str("    pop rdx\n");       // rdx = 0xFFFFFFFF_00000000
+                    asm.push_str("    push rcx\n");
+                    asm.push_str("    xor [rsp + rsi + 0x34], ecx\n");
+                    asm.push_str("    pop rdi\n");       // rdi = 0x00000000_FFFFFFFF
                     asm.push_str("    push rsp\n");
                     asm.push_str("    pop rbx\n");       // rbx = original rsp + some registers
                 },
@@ -97,10 +106,6 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                         );
                     }
                 }
-                
-                asm.push_str("; jmp to shellcode\n");
-                asm.push_str("to_shellcode:\n");
-                asm.push_str("    jmp esp\n");
             },
             (StackSize::X64(stand), StackSize::X64(num1), StackSize::X64(num2)) => {
                 // lower 32 bits
@@ -108,11 +113,15 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                 let lnum1: u32  = (num1 % 0x100000000 as u64) as u32;
                 let lnum2: u32  = (num2 % 0x100000000 as u64) as u32;
                 let lfcnt = lstand.count_ones() / 8;
+                print!("lower: {:08X} {:08X} {:08X} {}, ", lstand, lnum1, lnum2, lfcnt);
                 // upper 32 bits
                 let ustand: u32 = (stand / 0x100000000 as u64) as u32;
                 let unum1: u32  = (num1 / 0x100000000 as u64) as u32;
                 let unum2: u32  = (num2 / 0x100000000 as u64) as u32;
-                let ufcnt = lstand.count_ones() / 8;
+                let ufcnt = ustand.count_ones() / 8;
+                println!("upper: {:08X} {:08X} {:08X} {}", ustand, unum1, unum2, ufcnt);
+
+                asm.push_str(&format!("; push 0x{:016X}\n", stand ^ num1 ^ num2)); // comment
 
                 // TODO: xorの最適化 <<<<<<<<<<<<<<<<<<<<<
                 if lfcnt > 2 && ufcnt > 2 {
@@ -135,8 +144,9 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     asm.push_str(
                         xor_ff(ustand, false, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
                     );
-                } else if lfcnt > 2 && ufcnt < 2 {
-                    asm.push_str("    push ecx\n");
+                } else if lfcnt > 2 && ufcnt <= 2 {
+                    // rdi = 0x00000000_FFFFFFFF
+                    asm.push_str("    push rdi\n");
 
                     // lower 4 bytes
                     asm.push_str("    pop rax\n");
@@ -155,7 +165,9 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     asm.push_str(
                         xor_ff(ustand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
                     );
-                } else if lfcnt < 2 && ufcnt > 2 {
+                } else if lfcnt <= 2 && ufcnt > 2 {
+                    // rdx = 0xFFFFFFFF_00000000
+                    asm.push_str("    push rdx\n");
                     // lower 4 bytes
                     asm.push_str(&format!("    push 0x{:08x}\n", lnum1));
                     asm.push_str("    pop rax\n");
@@ -166,9 +178,8 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                     );
 
                     // upper 4 bytes
-                    asm.push_str("    push ecx\n");
+                    asm.push_str(&format!("    push 0x{:08x}\n", unum1));
                     asm.push_str("    pop rax\n");
-                    asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum1));
                     asm.push_str(&format!("    xor eax, 0x{:08x}\n", unum2));
                     asm.push_str("    xor [rsp + rsi + 0x34], eax\n");
                     asm.push_str(
@@ -193,13 +204,18 @@ pub fn generate_asm(bytes: &Vec<(StackSize, StackSize, StackSize)>, output: &mut
                         xor_ff(ustand, true, Register::Reg64(Reg64::RSI), Reg16::CX, 0x34 as u8).as_str()
                     );
                 }
-
-                asm.push_str("; jmp to shellcode\n");
-                asm.push_str("to_shellcode:\n");
-                asm.push_str("    jmp rsp\n");
+                // TODO: 特例: 0xFF0000FF_????????, 0x????????_FF0000FF, 0xFF0000FF_FF0000FF
             },
             _ => panic!("Invalid stack size"),
         }
+    }
+
+    asm.push_str("; jmp to shellcode\n");
+    asm.push_str("to_shellcode:\n");
+    if arch == 0 {
+        asm.push_str("    jmp esp\n");
+    } else {
+        asm.push_str("    jmp rsp\n");
     }
 
     output.write_all(asm.as_bytes())

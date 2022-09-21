@@ -76,7 +76,7 @@ fn main() -> std::io::Result<()> {
         // ----
         // 64bit (x64)
         // 0x48, 0x8B, 0xE3 (mov rsp, rbx)
-        // 0x5e, 0x5b, 0x5a, 0x59, 0x58 (pop rsi, pop rbx, pop rdx, pop rcx, pop rax)
+        // 0x5f, 0x5e, 0x5b, 0x5a, 0x59, 0x58 (pop rdi, pop rsi, pop rbx, pop rdx, pop rcx, pop rax)
         // 0xC3 (ret)
         for b in raw_bytes {
             if b == "C3" || b == "c3" {
@@ -89,6 +89,7 @@ fn main() -> std::io::Result<()> {
                     bytes.push(0x48);
                     bytes.push(0x8B);
                     bytes.push(0xE3);
+                    bytes.push(0x5F);
                     bytes.push(0x5E);
                     bytes.push(0x5B);
                     bytes.push(0x5A);
