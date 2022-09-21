@@ -33,7 +33,11 @@ pub fn change_bytes_to_stack_size(bytes: &Vec<u8>, arch: usize) -> Result<Vec<St
             if (i + 1) % 8 == 0 {
                 let mut tmp: u64 = 0;
                 for j in 0..8 {
-                    tmp |= (*b as u64) << (j * 8);
+                    if j == 0 {
+                        tmp |= *b as u64;
+                    } else {
+                        tmp |= (bytes[i - j] as u64) << (j * 8);
+                    }
                 }
                 stack_bytes.push(StackSize::X64(tmp));
             }
@@ -80,7 +84,10 @@ pub fn split_bytes_to_ascii(bytes_seq: StackSize) -> (StackSize, StackSize, Stac
         if *b >= 0x80 {
             match &mut stand {
                 StackSize::X86(num) => *num |= (0xFF << ((3 - i) * 8)) as u32,
-                StackSize::X64(num) => *num |= (0xFF << ((7 - i) * 8)) as u64,
+                StackSize::X64(num) => {
+                    let tmp2: u64 = 0xFF << ((7 - i) * 8);
+                    *num |= tmp2 as u64;
+                },
             }
             tmp ^= 0xFF;
         }
@@ -110,6 +117,10 @@ pub fn split_bytes_to_ascii(bytes_seq: StackSize) -> (StackSize, StackSize, Stac
     };
     match bytes_seq {
         StackSize::X86(num) => {
+            let fstand: u32 = match stand {
+                StackSize::X86(num) => num,
+                StackSize::X64(_) => 0,
+            };
             let fnum1: u32 = match num1 {
                 StackSize::X86(num) => num,
                 _ => {
@@ -124,10 +135,14 @@ pub fn split_bytes_to_ascii(bytes_seq: StackSize) -> (StackSize, StackSize, Stac
                     0
                 }
             };
-            println!("{:02X} {:02X} {:02X} {:02X} -> 0x{:08X} = 0x{:08X} ^ 0x{:08X}",
-            for_print[0], for_print[1], for_print[2], for_print[3], num, fnum1, fnum2);
+            println!("{:02X} {:02X} {:02X} {:02X} -> 0x{:08X} = 0x{:08X} ^ 0x{:08X} ^ 0x{:08X}",
+            for_print[0], for_print[1], for_print[2], for_print[3], num, fstand, fnum1, fnum2);
         },
         StackSize::X64(num) => {
+            let fstand: u64 = match stand {
+                StackSize::X64(num) => num,
+                _ => 0,
+            };
             let fnum1: u64 = match num1 {
                 StackSize::X64(num) => num,
                 _ => {
@@ -142,8 +157,8 @@ pub fn split_bytes_to_ascii(bytes_seq: StackSize) -> (StackSize, StackSize, Stac
                     0
                 }
             };
-            println!("{:02X} {:02X} {:02X} {:02X} {:02X} {:02X} {:02X} {:02X} -> 0x{:016X} = 0x{:016X} ^ 0x{:016X}",
-            for_print[0], for_print[1], for_print[2], for_print[3], for_print[4], for_print[5], for_print[6], for_print[7], num, fnum1, fnum2);
+            println!("{:02X} {:02X} {:02X} {:02X} {:02X} {:02X} {:02X} {:02X} -> 0x{:016X} = 0x{:016X} ^ 0x{:016X} ^ 0x{:016X}",
+            for_print[0], for_print[1], for_print[2], for_print[3], for_print[4], for_print[5], for_print[6], for_print[7], num, fstand, fnum1, fnum2);
         },
     };
 
