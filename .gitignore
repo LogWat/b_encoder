@@ -1,11 +1,9 @@
-# ignore extension-less files
-*
-!/**/
-!*.*
-
-b_encoder/*
-!b_encoder/*.*
-
+asm/*
+!asm/*.*
+test/*
+!test/*.*
+b_encoder/**/*
+!b_encoder/**/*.*
 *.exe
 *.bin
 *.o
@@ -15,3 +13,4 @@ b_encoder/target
 *.bak
 *.st
 in
+*.obj

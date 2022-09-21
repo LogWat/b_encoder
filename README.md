@@ -53,7 +53,9 @@
 - Windowsの実行可能ファイル形式はPE format(Portable Executable)
     - プロセス生成時には，メモリ割り当てとインポートした関数解決が行われる
 
+- cdb.exeを使ってPEBとかLDRとかを確認する
 
+---
 ### 32-bit
 - DLLBase Addr の見つけ方
     1. fs:0x30 -> PEB (Process Env Block)
@@ -81,9 +83,34 @@
         10. [(4) + 0x24] -> RVA of Ordinal Table
         11. base + (10) -> Address of Ordinal Table
         12. (9)のNamePointerTableから，関数の名前をもとにループで探索 場所を記憶(12)
-        13. [(11) + (12) * 2] -> 目的関数のOrdinal Number
-        14. [(7) + (13) * 4] -> RVA of 目的関数
-        15. base + (14) -> Address of 目的関数!!!
+        13. [(11) + (12) * 2] -> Ordinal Number of func
+        14. [(7) + (13) * 4] -> RVA func
+        15. base + (14) -> func Address
+---
+### 64bit
+- DLLBase Addressの見つけ方
+    1. gs:0x60 -> PEB (Process Env Block)
+    2. [(1) + 0x18] -> LDR (_PEB_LDR_DATA)
+    3. [(2) + 0x20] -> InMemoryOrderModuleList (_LIST_ENTRY) (1st) 
+    4. [ (3) ] -> InMemoryOrderModuleList (2nd)
+    5. [ (4) ] -> InMemoryOrderModuleList (3rd) (_LDR_DATA_TABLE_ENTRY)
+    6. [(5) + 0x20] -> kernel32.dll Base Address
+
+- WinAPI Function Addressの見つけ方
+    1. [Base + 0x3C] -> Offset ExeHeader
+    2. Base + (1) -> ExeHeader
+    3. [(2) + 0x88] -> RVA Export Table
+    4. Base + (3) ->  Export Table Address
+    5. [(4) + 0x1C] -> RVA Address Table
+    6. Base + (5) -> Address Table Address(w)
+    7. [(4) + 0x20] -> RVA NamePointerTable
+    8. Base + (7) -> NamePointerTable Address
+    9. [(4) + 0x24] -> RVA OrdinalTable
+    10. Base + (9) -> OrdinalTable Address
+    11. (8)のNamePointerTableから，関数の名前をもとに探索 場所を記憶(11)
+    12. [(10) + (11) * 2] -> Ordinal Number of func
+    13. [(6) + (12) * 4] -> RVA func
+    14. Base + (13) -> func Address
 
 ---
 ## メモ
