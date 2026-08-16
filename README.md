@@ -138,3 +138,19 @@
     - ` push byte 0x?? -> pop eax -> xor al, 0x?? ` -> `j?X4?`
     - ` push 0x???????? -> pop eax -> xor al, 0x???????? ` -> `j?X4?`
     - ??の部分がASCIIなら別になんでもいい
+
+---
+### 実行例
+
+# ビルド
+rustc test/ror_tool.rs -o test/ror_tool
+
+# ハッシュ計算 (デフォルトは shift: 0x11)
+./test/ror_tool WinExec
+# 出力: WinExec (shift: 0x11) = 0x3C3E6889
+
+# shift量の指定 (例: ROR13 = 0x0D)
+./test/ror_tool WinExec 0x0D
+
+# ビット詳細表示付き (-v)
+./test/ror_tool WinExec -v
